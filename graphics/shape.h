@@ -13,6 +13,7 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix3i)
 #include <Eigen/Dense>
 
 class Shader;
+typedef Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> RowMatrixXf;
 
 class Shape
 {
@@ -56,6 +57,13 @@ private:
     Eigen::Matrix4f m_modelMatrix;
 
     bool m_wireframe;
+
+    RowMatrixXf V_vbo;
+    Eigen::Matrix<unsigned, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> F_vbo;
+
+    RowMatrixXf V_normals_vbo;
+
+
 };
 
 #endif // SHAPE_H

@@ -25,7 +25,7 @@ void CubifyMeshProcessor::init(std::string filename)
   checkError();
 
 
-  _shape->setModelMatrix(Eigen::Affine3f(Eigen::Scaling(0.2f, 0.2f, 0.2f)));
+ // _shape->setModelMatrix(Eigen::Affine3f(Eigen::Scaling(0.2f, 0.2f, 0.2f)));
 
 }
 

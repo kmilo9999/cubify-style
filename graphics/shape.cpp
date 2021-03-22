@@ -4,6 +4,9 @@
 
 #include "graphics/Shader.h"
 
+#include <igl/per_face_normals.h>
+#include <igl/per_vertex_normals.h>
+
 using namespace Eigen;
 
 Shape::Shape()
@@ -190,7 +193,21 @@ void Shape::init(const std::vector<Eigen::Vector3f> &vertices)
 
 void Shape::init(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F)
 {
+    Eigen::MatrixXd V_normals;
+    Eigen::MatrixXd F_normals; // One normal per face
+
+    igl::per_face_normals(V, F, F_normals);
+    igl::per_vertex_normals(V, F, F_normals, V_normals);
+
+    V_vbo = V.cast<float>();
+    F_vbo = F.cast<unsigned>();
+    V_normals_vbo = V_normals.cast<float>();
+
+
+    V_normals_vbo = -V_normals_vbo;
+
     glGenBuffers(1, &m_tetVbo);
+    glGenBuffers(1, &m_normalsVbo);
     glGenBuffers(1, &m_tetIbo);
 
     glGenVertexArrays(1, &m_surfaceVao);
@@ -198,18 +215,23 @@ void Shape::init(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F)
     glBindVertexArray(m_surfaceVao);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_tetVbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*V.size(), V.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, V.cols(), GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*V_vbo.size(), V_vbo.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, V_vbo.cols(), GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 
+    glBindBuffer(GL_ARRAY_BUFFER, m_normalsVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*V_normals_vbo.size(), V_normals_vbo.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(1, V_normals_vbo.cols(), GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(1);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_tetIbo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned)*F.size(), F.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned)*F_vbo.size(), F_vbo.data(), GL_DYNAMIC_DRAW);
 
 
 
     glBindVertexArray(0);
 
-    m_numSurfaceVertices = F.size();
+    m_numSurfaceVertices =  3*F.rows();
     //m_verticesSize = vertices.size();
    // m_faces = triangles;
 
@@ -261,7 +283,7 @@ void Shape::draw(Shader *shader)
         shader->setUniform("blue", m_blue);
         shader->setUniform("alpha", m_alpha);
         glBindVertexArray(m_surfaceVao);
-        glDrawElements(GL_TRIANGLES, m_numSurfaceVertices, GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(0));
+        glDrawElements(GL_TRIANGLES, m_numSurfaceVertices, GL_UNSIGNED_INT,0);
         glBindVertexArray(0);
     }
 }
