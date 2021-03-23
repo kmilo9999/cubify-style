@@ -6,6 +6,7 @@
 
 #include <igl/per_face_normals.h>
 #include <igl/per_vertex_normals.h>
+#include "graphics/GraphicsDebug.h"
 
 using namespace Eigen;
 
@@ -204,7 +205,7 @@ void Shape::init(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F)
     V_normals_vbo = V_normals.cast<float>();
 
 
-    V_normals_vbo = -V_normals_vbo;
+    //V_normals_vbo = -V_normals_vbo;
 
     glGenBuffers(1, &m_tetVbo);
     glGenBuffers(1, &m_normalsVbo);
@@ -231,7 +232,13 @@ void Shape::init(const Eigen::MatrixXd& V, const Eigen::MatrixXi& F)
 
     glBindVertexArray(0);
 
-    m_numSurfaceVertices =  3*F.rows();
+    m_numSurfaceVertices =  3*F_vbo.rows();
+
+    m_red = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    m_blue = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    m_green = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+    m_alpha = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
     //m_verticesSize = vertices.size();
    // m_faces = triangles;
 
@@ -277,13 +284,21 @@ void Shape::draw(Shader *shader)
         glBindVertexArray(0);
     } else {
         shader->setUniform("wire", 0);
+        //checkError();
         shader->setUniform("m", m_modelMatrix);
+        //checkError();
         shader->setUniform("red", m_red);
+        //checkError();
         shader->setUniform("green", m_green);
+        //checkError();
         shader->setUniform("blue", m_blue);
+        //checkError();
         shader->setUniform("alpha", m_alpha);
+        //checkError();
         glBindVertexArray(m_surfaceVao);
+        //checkError();
         glDrawElements(GL_TRIANGLES, m_numSurfaceVertices, GL_UNSIGNED_INT,0);
+        //checkError();
         glBindVertexArray(0);
     }
 }

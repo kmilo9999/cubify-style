@@ -1,4 +1,5 @@
 #version 330 core
+
 out vec4 fragColor;
 
 // Additional information for lighting
@@ -22,5 +23,5 @@ void main() {
     float c = clamp(dot(-normal_worldSpace, lightDir), 0, 1);
 
     fragColor = vec4(red * c * lightColor[0], green * c * lightColor[0], blue * c * lightColor[0], 1);
-   // fragColor = vec4(1.0,0.0,1.0, 1.0);
+
 }
