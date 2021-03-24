@@ -15,7 +15,7 @@ void CubifyMeshProcessor::init(std::string filename)
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
 
-    igl::read_triangle_mesh("D:/cs2240/cs2240-cubify-style/cubify-style/meshes/Cube.obj", V, F);
+    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
 
 
     _shape = std::make_shared<Shape>();
