@@ -24,7 +24,7 @@ void CubifyMeshProcessor::init(std::string filename)
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
 
-    igl::read_triangle_mesh("D:/cs2240/cs2240-cubify-style/cubify-style/meshes/Cube.obj", V, F);
+    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
 
 
     _shape = std::make_shared<Shape>();
@@ -177,14 +177,14 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
             //https://web.stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf page  32
             //Sκ(a)=(a − κ)+ − (−a − κ)+
             // new Z
-            double kIndex = lambda *  areaXVertex[j] / p;
+            double kIndex = lambda *  areaXVertex(j) / p;
             Eigen::VectorXd a = newRotationM*vn+vu;
 
             Eigen::VectorXd lh = a.array() - kIndex;
-            Eigen::VectorXd max1 = lh.array().max(Eigen::VectorXd::Zero().array());
+            Eigen::VectorXd max1 = lh.array().max(0.0);
 
             Eigen::VectorXd rh = -a.array() - kIndex;
-            Eigen::VectorXd max2 = rh.array().max(Eigen::VectorXd::Zero().array());
+            Eigen::VectorXd max2 = rh.array().max(0.0);
 
 
             Eigen::VectorXd zNew = max1 - max2;
