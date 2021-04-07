@@ -4,6 +4,8 @@
 #include <igl/read_triangle_mesh.h>
 #include <igl/cotmatrix.h>
 #include <igl/per_vertex_normals.h>
+#include <igl/adjacency_list.h>
+
 #include <igl/arap_rhs.h>
 #include <igl/triangle_triangle_adjacency.h>
 #include <igl/slice.h>
@@ -24,7 +26,35 @@ void CubifyMeshProcessor::init(std::string filename)
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
 
+
+    Eigen::VectorXd E;
+
+
     igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
+
+    std::vector<Eigen::Matrix3d> testRots;
+
+    genTestRotations(V,testRots);
+
+    globalStep(V,F,E, testRots);
+
+
+    std::cout << V <<std::endl;
+
+    Eigen::Vector3d first;
+    first << V(0) ,V(8),V(16);
+
+
+    std::cout << first <<std::endl;
+
+    first = first.transpose() * testRots[0];
+    std::cout << first <<std::endl;
+    V(0) = first[0];
+    V(8) = first[1];
+    V(16) = first[2];
+
+    std::cout << V <<std::endl;
+
 
 
     _shape = std::make_shared<Shape>();
@@ -49,6 +79,190 @@ void CubifyMeshProcessor::draw(Shader *m_shader)
 
 void CubifyMeshProcessor::update(float seconds)
 {
+
+}
+
+
+void CubifyMeshProcessor::genTestRotations(const Eigen::MatrixXd& vertices,
+                                     std::vector<Eigen::Matrix3d>& rots)
+{
+    std::cout << vertices.size() <<std::endl;
+
+    std::cout << "gen Rots" <<std::endl;
+    std::vector<Eigen::Matrix3d> rotations;
+
+    for (size_t i = 0; i <  vertices.size()/3; i++){
+        Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
+        rotations.push_back(I);
+    }
+    //shift one vertex 15 degrees around the y axis
+    Eigen::Matrix3d fifteendegreeRotPitch;
+    fifteendegreeRotPitch <<  0.96f , 0.0f , 0.25f ,
+                            0.0f , 1.0f , 0.0f ,
+                            -0.25f , 0.0f , 0.96f;
+
+
+//    rotations[0] = fifteendegreeRotPitch;
+
+    for (size_t i = 0; i <  rotations.size(); i++){
+        std::cout << rotations[i] <<std::endl <<std::endl;
+
+    }
+    rots = rotations;
+
+
+
+
+}
+
+void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,
+                                     Eigen::VectorXd& energyXvertex, std::vector<Eigen::Matrix3d>& rots)
+{
+
+    int numVertices = vertices.size()/3;
+    int numFaces = faces.size()/3;
+
+
+    //get cotan matrix
+    Eigen::SparseMatrix<double> cotangentW;
+    igl::cotmatrix(vertices,faces,cotangentW);
+
+    cotangentW*cotangentW;
+
+
+    //calc Laplace Beltrami
+    std::vector<std::vector<int>> incidentFaces;
+    std::vector<std::vector<int>> vertexIndicesIncidents;
+    igl::vertex_triangle_adjacency(vertices.rows(),faces,incidentFaces,vertexIndicesIncidents);
+    std::cout << "start global" <<std::endl;
+
+
+    Eigen::MatrixXd M(numVertices,numVertices);
+
+
+    for (size_t i = 0; i < numVertices; i++){
+        for (size_t j = 0; j < numVertices; j++){
+
+            M ( i,j ) = 0.0;
+        }
+    }
+
+    std::cout << M.size() <<std::endl;
+    std::cout << M(0,0) <<std::endl;
+
+
+    for (size_t i = 0; i < incidentFaces.size(); i++){
+        std::vector<int> faceInds = incidentFaces[i];
+
+        float vertexArea = 0;
+
+        for (size_t j = 0; j < faceInds.size(); j++){
+            int faceInd = faceInds[j];
+            Eigen::Vector3i vertInds;
+            vertInds << faces(faceInd) , faces(faceInd+numFaces), faces(faceInd+2*numFaces);
+
+            Eigen::Vector3d vert0;
+            vert0 << vertices(vertInds[0]), vertices(vertInds[0]+numVertices), vertices(vertInds[0]+2*numVertices);
+
+
+            Eigen::Vector3d vert1;
+            vert1 << vertices(vertInds[1]), vertices(vertInds[1]+numVertices), vertices(vertInds[1]+2*numVertices);
+
+            Eigen::Vector3d vert2;
+            vert2 << vertices(vertInds[2]), vertices(vertInds[2]+numVertices), vertices(vertInds[2]+2*numVertices);
+
+
+            Eigen::Vector3d crossP = (vert2-vert0).cross(vert1-vert0);
+            float area = crossP.norm()*0.5;
+
+            vertexArea += area;
+
+
+
+
+
+        }
+        vertexArea /= 3;
+        M(i,i) = vertexArea;
+
+
+    }
+    std::cout << "M(6,6)" <<std::endl;
+
+    std::cout << M <<std::endl;
+
+
+
+    Eigen::MatrixXd L(numVertices,numVertices);
+
+    L = M.inverse()*cotangentW;
+
+    std::cout << L <<std::endl;
+
+
+
+
+
+
+
+
+
+    std::vector<std::vector<int>> incidentVerts;
+
+    igl::adjacency_list(faces, incidentVerts);
+
+    for (size_t i = 0; i < incidentVerts.size(); i++){
+        std::cout << "new vert "<<std::endl;
+
+        std::vector<int> curNeighborInds = incidentVerts[i];
+
+        Eigen::Vector3d P_i;
+        Eigen::Matrix3d R_i = rots[i];
+        std::cout << R_i <<std::endl;
+
+        P_i << vertices(i), vertices(i+numVertices), vertices(i+2*numVertices);
+
+
+
+
+
+        for (size_t k = 0; k < curNeighborInds.size(); k++){
+
+            std::cout << "neighbor vert"<<std::endl <<std::endl;
+
+
+            int j = curNeighborInds[k];
+
+            std::cout << i;
+            std::cout << " ";
+            std::cout << j <<std::endl;
+            Eigen::Vector3d P_j;
+            Eigen::Matrix3d R_j = rots[j];
+
+            P_j << vertices(j), vertices(j+numVertices), vertices(j+2*numVertices);
+            std::cout << P_j <<std::endl;
+
+            float curWeight = cotangentW.coeff(i,j);
+
+
+            Eigen::Vector3d P_diff = P_i - P_j;
+            Eigen::Matrix3d R_sum = R_i + R_j;
+
+            Eigen::Vector3d b_i = curWeight/2*R_sum*P_diff;
+
+
+
+
+        }
+
+    }
+    std::cout << "between" <<std::endl;
+
+
+
+
+
+
 
 }
 
