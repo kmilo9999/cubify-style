@@ -71,9 +71,7 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
     std::vector<std::vector<int>> vertexIndicesIncidents;
     igl::vertex_triangle_adjacency(vertices.rows(),faces,incidentFaces,vertexIndicesIncidents);
 
-    std::vector<Eigen::MatrixXi> vertexList;
-    vertexList.clear();
-    vertexList.resize(vertices.rows());
+    std::vector<Eigen::MatrixXi> vertexList(vertices.rows());
 
     std::vector<Eigen::VectorXd> weigthsVecList(vertices.rows());
     std::vector<Eigen::MatrixXd> dv(vertices.rows());
