@@ -1,10 +1,10 @@
 QT += core gui opengl
 
-TARGET = cubify-style
+TARGET = simulation
 TEMPLATE = app
 
-CONFIG += c++17 console
-CONFIG -= app_bundle
+QMAKE_CXXFLAGS += -mstackrealign
+CONFIG += c++17
 
 unix:!macx {
     LIBS += -lGLU
@@ -13,13 +13,6 @@ win32 {
     DEFINES += GLEW_STATIC
     LIBS += -lopengl32 -lglu32
 }
-
-
-QMAKE_CXXFLAGS += -msse2 -Wa,-mbig-obj
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-
 SOURCES += \
         cubifymeshprocessor.cpp \
         libs/glew-1.10.0/src/glew.c \
