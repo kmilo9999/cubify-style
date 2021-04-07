@@ -15,7 +15,7 @@ public:
     void init(std::string filename);
     void draw(Shader *m_shader);
     void update(float seconds);
-    void localStep(const Eigen::MatrixXd& V,const Eigen::MatrixXi& F,Eigen::VectorXd& energyXvertex);
+    void localStep(const Eigen::MatrixXd& V, const Eigen::MatrixXd& U,const Eigen::MatrixXi& F,Eigen::VectorXd& energyXvertex);
     void optimalRotationMatrix(const Eigen::MatrixXd& dvi, const Eigen::VectorXd& normali,
                                double pk,
                                const Eigen::MatrixXd& weigth, const Eigen::VectorXd& du,

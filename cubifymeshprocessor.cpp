@@ -12,6 +12,7 @@
 #include "graphics/shape.h"
 #include "graphics/GraphicsDebug.h"
 #include <igl/svd3x3.h>
+#include <igl/rotation_matrix_from_directions.h>
 
 CubifyMeshProcessor::CubifyMeshProcessor()
 {
@@ -30,12 +31,22 @@ void CubifyMeshProcessor::init(std::string filename)
     _shape = std::make_shared<Shape>();
 
       checkError();
+
+      Eigen::Matrix3d RM;
+      Eigen::Vector3d axis1(1,1,0);
+      Eigen::Vector3d axis2 = Eigen::Vector3d::UnitY();
+      RM = igl::rotation_matrix_from_directions(axis1, axis2);
+
+      Eigen::MatrixXd U = V * RM.transpose();
+      Eigen::VectorXd energyXvertex;
+
+      localStep(V,U,F,energyXvertex);
+
     _shape->init(V,F);
 
 
   checkError();
-  Eigen::VectorXd energyXvertex;
-  localStep(V,F,energyXvertex);
+
 
 
  // _shape->setModelMatrix(Eigen::Affine3f(Eigen::Scaling(0.2f, 0.2f, 0.2f)));
@@ -54,7 +65,7 @@ void CubifyMeshProcessor::update(float seconds)
 
 }
 
-void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,
+void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXd& deform,const Eigen::MatrixXi& faces,
                                      Eigen::VectorXd& energyXvertex)
 {
 
@@ -74,7 +85,9 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
     std::vector<Eigen::VectorXd> weigthsVecList(vertices.rows());
     std::vector<Eigen::MatrixXd> dv(vertices.rows());
-     Eigen::MatrixXd U = vertices;
+
+
+
 
 
      //the barycentric area around vertex
@@ -150,8 +163,8 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
         Eigen::VectorXd dU(3,hE.rows());
 
         Eigen::MatrixXd U_hE0, U_hE1;
-        igl::slice(U,hE.col(0),1,U_hE0);
-        igl::slice(U,hE.col(1),1,U_hE1);
+        igl::slice(deform,hE.col(0),1,U_hE0);
+        igl::slice(deform,hE.col(1),1,U_hE1);
 
         dU = (U_hE1 - U_hE0).transpose();
 
