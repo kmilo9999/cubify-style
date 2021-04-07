@@ -16,6 +16,7 @@ public:
     void draw(Shader *m_shader);
     void update(float seconds);
     void localStep(const Eigen::MatrixXd& V,const Eigen::MatrixXi& F,Eigen::VectorXd& energyXvertex);
+    void optimalRotationMatrix();
 
 private:
 

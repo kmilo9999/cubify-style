@@ -24,7 +24,7 @@ void CubifyMeshProcessor::init(std::string filename)
     Eigen::MatrixXd V;
     Eigen::MatrixXi F;
 
-    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
+    igl::read_triangle_mesh("./meshes/teapot.obj", V, F);
 
 
     _shape = std::make_shared<Shape>();
@@ -34,6 +34,8 @@ void CubifyMeshProcessor::init(std::string filename)
 
 
   checkError();
+  Eigen::VectorXd energyXvertex;
+  localStep(V,F,energyXvertex);
 
 
  // _shape->setModelMatrix(Eigen::Affine3f(Eigen::Scaling(0.2f, 0.2f, 0.2f)));
@@ -69,7 +71,10 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
     std::vector<std::vector<int>> vertexIndicesIncidents;
     igl::vertex_triangle_adjacency(vertices.rows(),faces,incidentFaces,vertexIndicesIncidents);
 
-    std::vector<Eigen::MatrixXi> vertexList(vertices.rows());
+    std::vector<Eigen::MatrixXi> vertexList;
+    vertexList.clear();
+    vertexList.resize(vertices.rows());
+
     std::vector<Eigen::VectorXd> weigthsVecList(vertices.rows());
     std::vector<Eigen::MatrixXd> dv(vertices.rows());
      Eigen::MatrixXd U = vertices;
@@ -86,10 +91,11 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
      for(int i = 0 ; i <  vertices.rows(); i++)
      {
       adjacentFaces = incidentFaces[i];
-      vertexList[i].resize(incidentFaces.size()*3, 2);
-      weigthsVecList[i].resize(incidentFaces.size()*3);
+      int ns = adjacentFaces.size() * 3;
+      vertexList[i].resize(ns, 2);
+      weigthsVecList[i].resize(ns);
 
-      for (size_t j=0; j<incidentFaces.size(); j++)
+      for (size_t j=0; j<adjacentFaces.size(); j++)
       {
           int v0 = faces(adjacentFaces[j],0);
           int v1 = faces(adjacentFaces[j],1);
@@ -110,17 +116,22 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
       dv[i].resize(3, adjacentFaces.size()*3);
       Eigen::MatrixXd hV0, hV1;
-      igl::slice(vertices,vertexList[i].col(0),1,hV0);
+
+      Eigen::MatrixXi m =vertexList[i].col(0);
+      std::cout << "Here is the matrix m:" << std::endl   << m << std::endl;
+
+
+      igl::slice(vertices,m,1,hV0);
       igl::slice(vertices,vertexList[i].col(1),1,hV1);
       dv[i] = (hV1 - hV0).transpose();
      }
 
      // Local step
-    Eigen::MatrixXd z(vertices.rows(),3);
+    Eigen::MatrixXd z(3,vertices.rows());
     z.setZero();
-    Eigen::MatrixXd u (vertices.rows(),3);
+    Eigen::MatrixXd u (3,vertices.rows());
     u.setZero();
-    Eigen::MatrixXd rhos(vertices.rows(),3) ;
+    Eigen::VectorXd rhos(vertices.rows()) ;
     rhos.setConstant(1e-4);
 
    energyXvertex.resize(vertices.rows());
@@ -153,15 +164,14 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
         for (int k=0; k<100; k++)
         {
-            Eigen::Matrix3d S = deforfmedVertex + (p * vn * (vz-vu).transpose());
-            S /= S.norm();
+            Eigen::Matrix3d rotationM = deforfmedVertex + (p * vn * (vz-vu).transpose());
             Eigen::VectorXd zOld = vz;
 
             // New Rotation Matrix = svd3x3
             Eigen::Matrix3d matrixU;
             Eigen::Matrix<double, 3, 1> singularValues;
             Eigen::Matrix3d matrixV;
-            igl::svd3x3(S, matrixU, singularValues, matrixV);
+            igl::svd3x3(rotationM, matrixU, singularValues, matrixV);
 
             double d = (matrixV * matrixU.transpose()).determinant();
             if(d < 0)
