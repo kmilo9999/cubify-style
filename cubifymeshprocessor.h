@@ -15,10 +15,12 @@ public:
     void init(std::string filename);
     void draw(Shader *m_shader);
     void update(float seconds);
-    void localStep(const Eigen::MatrixXd& V, const Eigen::MatrixXd& U,const Eigen::MatrixXi& F,Eigen::VectorXd& energyXvertex);
+    void localStep(const Eigen::MatrixXd& V, const Eigen::MatrixXd& U,const Eigen::MatrixXi& F,
+                   std::vector<Eigen::Matrix3d>& rotationXvertex);
+
     void optimalRotationMatrix(const Eigen::MatrixXd& dvi, const Eigen::VectorXd& normali,
                                double pk,
-                               const Eigen::MatrixXd& weigth, const Eigen::VectorXd& du,
+                               const Eigen::MatrixXd& weigth, const Eigen::MatrixXd& du,
                                const Eigen::MatrixXd& displacement,Eigen::Matrix3d& out);
 
 private:

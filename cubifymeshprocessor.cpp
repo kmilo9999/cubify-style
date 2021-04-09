@@ -23,24 +23,31 @@ void CubifyMeshProcessor::init(std::string filename)
 {
 
     Eigen::MatrixXd V;
+
     Eigen::MatrixXi F;
 
-    igl::read_triangle_mesh("./meshes/teapot.obj", V, F);
+    igl::read_triangle_mesh("./meshes/Cube3.obj", V, F);
 
 
     _shape = std::make_shared<Shape>();
 
       checkError();
 
-      Eigen::Matrix3d RM;
-      Eigen::Vector3d axis1(1,1,0);
-      Eigen::Vector3d axis2 = Eigen::Vector3d::UnitY();
-      RM = igl::rotation_matrix_from_directions(axis1, axis2);
+//      Eigen::Matrix3d RM;
+//      Eigen::Vector3d axis1(1,1,0);
+//      Eigen::Vector3d axis2 = Eigen::Vector3d::UnitY();
+//      RM = igl::rotation_matrix_from_directions(axis1, axis2);
 
-      Eigen::MatrixXd U = V * RM.transpose();
-      Eigen::VectorXd energyXvertex;
+      Eigen::MatrixXd U = V ;
+//      Eigen::VectorXd _v = V.row(5);
+//      Eigen::Matrix3d m;
+//      m = Eigen::AngleAxisd(M_PI/4, Eigen::Vector3d::UnitX())
+//          * Eigen::AngleAxisd(M_PI/4, Eigen::Vector3d::UnitY());
+//      V.row(5) = m * _v;
+      std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
 
-      localStep(V,U,F,energyXvertex);
+      localStep(V,U,F,RotationsXVertex);
+
 
     _shape->init(V,F);
 
@@ -66,7 +73,7 @@ void CubifyMeshProcessor::update(float seconds)
 }
 
 void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXd& deform,const Eigen::MatrixXi& faces,
-                                     Eigen::VectorXd& energyXvertex)
+                                     std::vector<Eigen::Matrix3d>& rotationXvertex)
 {
 
 
@@ -144,13 +151,12 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
     Eigen::VectorXd rhos(vertices.rows()) ;
     rhos.setConstant(1e-4);
 
-   energyXvertex.resize(vertices.rows());
-   energyXvertex.setZero();
 
     double lambda = 0.025;
 
 
     for(int j=0; j < vertices.rows();j++)
+    //for(int j=20; j < 21;j++)
     {
         Eigen::VectorXd vz = z.col(j);
         Eigen::VectorXd uk = u.col(j);
@@ -160,7 +166,7 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
         Eigen::MatrixXi hE = vertexList[j];
 
-        Eigen::VectorXd dU(3,hE.rows());
+        Eigen::MatrixXd dU(3,hE.rows());
 
         Eigen::MatrixXd U_hE0, U_hE1;
         igl::slice(deform,hE.col(0),1,U_hE0);
@@ -260,6 +266,15 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
                 pk = pk;
             }
 
+            std::cout << "RotationM" <<std::endl << newRotationM << std::endl;
+
+            Eigen::Vector3d xx = vertices.row(j) ;
+            Eigen::Vector3d newPos =  newRotationM * xx ;
+
+           std::cout << "new pos" <<std::endl << newPos << std::endl;
+
+            Eigen::MatrixXd m = newRotationM*dV-dU;
+
 
             // stop the optimization
             //https://web.stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf
@@ -269,32 +284,14 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
             double eabs = 1e-5;
 
             //end condition
-            double ePrim =  sqrt(2*z.size()) * eabs + erel * std::max((newRotationM*vn).norm(),zNew.norm());
-            double eDual =  sqrt(z.size()) * eabs + erel * (pk*uk).norm();
+            double ePrim =  sqrt(2.0*(double)z.size()) * eabs + erel * std::max((newRotationM*vn).norm(),zNew.norm());
+            double eDual =  sqrt((double)z.size()) * eabs + erel * (pk*uk).norm();
             if(primalResidual < ePrim &&  dualResidual < eDual)
             {
-
                 z.col(j) = zNew;
                 u.col(j) = uk;
                 rhos(j) = pk;
-
-                Eigen::VectorXd m = newRotationM*dV-dU;
-
-                // ||X|| = Trace(X*Y*transpose(X))
-                double sumDiagonal = (m * vertexWeigth.asDiagonal()*m.transpose()).trace() ;
-
-                double arap = (0.5) * sumDiagonal;
-
-
-                //https://machinelearningmastery.com/vector-norms-machine-learning/
-                //The L1 norm that is calculated as the sum of the absolute values of the vector.
-                //https://stackoverflow.com/questions/25340940/how-do-i-compute-the-absolute-value-of-a-vector-in-eigen
-                Eigen::VectorXd vectorAbs= (newRotationM*vn).cwiseAbs();
-                double l1_norm =vectorAbs.sum();
-
-                double cubeness = lambda * areaXVertex(j) *l1_norm;
-
-                energyXvertex(j) = arap + cubeness;
+                rotationXvertex[j] = newRotationM;
                 break;
 
             }
@@ -312,7 +309,7 @@ void CubifyMeshProcessor::optimalRotationMatrix(const Eigen::MatrixXd &dvi,
                                                 const Eigen::VectorXd &normali,
                                                 double pk,
                                                 const Eigen::MatrixXd &weigth,
-                                                const Eigen::VectorXd &du, const Eigen::MatrixXd &displacement,
+                                                const Eigen::MatrixXd &du, const Eigen::MatrixXd &displacement,
                                                 Eigen::Matrix3d& out)
 {
   Eigen::Matrix3d deforfmedVertex = dvi * weigth.asDiagonal() * du.transpose();
