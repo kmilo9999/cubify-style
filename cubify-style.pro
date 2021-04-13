@@ -1,6 +1,6 @@
 QT += core gui opengl
 
-TARGET = simulation
+TARGET = cubify-style
 TEMPLATE = app
 
 QMAKE_CXXFLAGS += -mstackrealign
