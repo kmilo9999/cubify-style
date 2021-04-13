@@ -71,7 +71,7 @@ void CubifyMeshProcessor::init(std::string filename)
       Eigen::MatrixXd U = V * RM.transpose();
       Eigen::VectorXd energyXvertex;
 
-      localStep(V,U,F,energyXvertex);
+//      localStep(V,U,F,energyXvertex);
 
     _shape->init(V,F);
 
@@ -141,7 +141,7 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
     Eigen::SparseMatrix<double> cotangentW;
     igl::cotmatrix(vertices,faces,cotangentW);
 
-    cotangentW*cotangentW;
+//    cotangentW*cotangentW;
 
 
     //calc Laplace Beltrami
@@ -232,7 +232,7 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
         Eigen::Vector3d P_i;
         Eigen::Matrix3d R_i = rots[i];
-        std::cout << R_i <<std::endl;
+//        std::cout << R_i <<std::endl;
 
         P_i << vertices(i), vertices(i+numVertices), vertices(i+2*numVertices);
 
@@ -262,7 +262,14 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
             Eigen::Vector3d P_diff = P_i - P_j;
             Eigen::Matrix3d R_sum = R_i + R_j;
 
+            std::cout << R_sum <<std::endl;
+            std::cout << P_diff <<std::endl;
+
+
+
             Eigen::Vector3d b_i = curWeight/2*R_sum*P_diff;
+
+            std::cout << b_i <<std::endl;
 
 
 
