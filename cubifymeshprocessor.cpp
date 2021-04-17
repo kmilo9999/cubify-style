@@ -30,9 +30,9 @@ void CubifyMeshProcessor::init(std::string filename)
     Eigen::MatrixXi F;
 
 
-    //igl::read_triangle_mesh("./meshes/Cube3.obj", V, F);
-   // igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
-    igl::read_triangle_mesh("./meshes/spot.obj", V, F);
+    igl::read_triangle_mesh("./meshes/Cube3.obj", V, F);
+//    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
+//    igl::read_triangle_mesh("./meshes/bean.obj", V, F);
 
 
     Eigen::VectorXd E;
@@ -43,16 +43,19 @@ void CubifyMeshProcessor::init(std::string filename)
 
     localStep(V,U,F,RotationsXVertex);
 
-   // std::vector<Eigen::Matrix3d> testRots;
+    std::vector<Eigen::Matrix3d> testRots;
 
-    //genTestRotations(V,testRots);
+    genTestRotations(V,testRots);
 
     //globalStep(V,F,E, testRots);
 
     Eigen::MatrixXd Vf;
     Vf.resize(V.rows(),3);
+    std::cout << "RotationsXVertex" <<std::endl;
 
-  globalStep(V,F,E, RotationsXVertex, Vf);
+    std::cout << RotationsXVertex[0] <<std::endl;
+
+  globalStep(V,F,E, testRots, Vf);
 
 
 //    std::cout << V <<std::endl;
@@ -77,7 +80,7 @@ void CubifyMeshProcessor::init(std::string filename)
 
      checkError();
 
-     igl::writeOBJ("./meshes/spotCUBY.obj",Vf,F);
+     igl::writeOBJ("./meshes/cub3CUBY.obj",Vf,F);
     _shape->init(Vf,F);
 
 
@@ -159,7 +162,6 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
     Eigen::MatrixXd myMat(numVertices,numVertices);
 
-
     for (size_t i = 0; i < numVertices; i++){
         for (size_t j = 0; j < numVertices; j++){
 
@@ -168,7 +170,6 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
     }
 
    // std::cout << M.size() <<std::endl;
-   // std::cout << M(0,0) <<std::endl;
 
 
     for (size_t i = 0; i < incidentFaces.size(); i++){
@@ -207,17 +208,29 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
 
     }
-  //  std::cout << "M(6,6)" <<std::endl;
-
-  //  std::cout << M <<std::endl;
+    std::cout << "Checkpoint" <<std::endl;
 
 
+    std::cout << numVertices <<std::endl;
 
-//    Eigen::MatrixXd LTEST(numVertices,numVertices);
+    std::cout << myMat <<std::endl;
+    std::cout << cotangentW <<std::endl;
 
-//    LTEST = M.inverse()*cotangentW;
+    Eigen::MatrixXd LTEST(numVertices,numVertices);
 
-   // std::cout << L <<std::endl;
+
+
+
+
+
+    LTEST = myMat*cotangentW;
+
+    std::cout << myMat.inverse() <<std::endl;
+    std::cout << LTEST <<std::endl;
+    std::cout << LTEST.transpose() <<std::endl;
+
+    std::cout << LTEST+LTEST.transpose() <<std::endl;
+
 
 
     /* GLOBAL */
@@ -225,8 +238,10 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
     igl::adjacency_list(faces, incidentVerts);
 
+    Eigen::MatrixXd Bs(numVertices,3);
+
+
     for (size_t i = 0; i < incidentVerts.size(); i++){
-        std::cout << "new vert "<<std::endl;
 
         std::vector<int> curNeighborInds = incidentVerts[i];
 
@@ -234,7 +249,7 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
         Eigen::Matrix3d R_i = rots[i];
 
 
-        P_i << vertices(i), vertices(i+numVertices), vertices(i+2*numVertices);
+        P_i =  vertices.row(i);
 
 
 
@@ -243,18 +258,14 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
         for (size_t k = 0; k < curNeighborInds.size(); k++){
 
-            std::cout << "neighbor vert"<<std::endl <<std::endl;
 
 
             int j = curNeighborInds[k];
 
-        //    std::cout << i;
-      //      std::cout << " ";
-       //     std::cout << j <<std::endl;
+
             Eigen::Vector3d P_j;
             Eigen::Matrix3d R_j = rots[j];
 
-          //  P_j << vertices(j), vertices(j+numVertices), vertices(j+2*numVertices);
               P_j =  vertices.row(j);
      //       std::cout << P_j <<std::endl;
 
@@ -268,20 +279,63 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
             b_i += (curWeight/2.0)*R_sum*P_diff;
 
-            std::cout << b_i <<std::endl;
 
 
 
 
         }
 
-        Vf.row(i) =  b_i;
+        Bs.row(i) =  b_i;
 
     }
-    std::cout << "between" <<std::endl;
+
+
+    std::cout << "Bs-------------" <<std::endl;
+
+    std::cout << Bs <<std::endl;
+    std::cout << Bs.size() <<std::endl;
 
 
 
+    Eigen::Vector3d  curVert;
+    curVert << vertices(0), vertices(8), vertices(16);
+    std::cout << curVert <<std::endl;
+    Eigen::MatrixXd LTESTSUM(numVertices,numVertices);
+
+    LTESTSUM= LTEST+LTEST.transpose();
+
+//    LTEST += LTESTT;
+    std::cout << "LTESTSUM" <<std::endl;
+
+    std::cout << LTESTSUM <<std::endl;
+
+
+    for (size_t i = 0 ; i < 3; i++){
+
+
+           Eigen::MatrixXd L(numVertices, numVertices);
+           L = LTESTSUM/2;
+
+
+
+           std::cout << "B" << std::endl <<std::endl;
+           std::cout << Bs.col(0) << std::endl;
+           std::cout << "L" << std::endl <<std::endl;
+
+           std::cout << L << std::endl;
+
+
+           Eigen::VectorXd x = L.colPivHouseholderQr().solve(Bs.col(i));
+           std::cout << "The solution is:\n" << x << std::endl;
+           Vf.col(i) = -x;
+    }
+    std::cout << "newVerts" <<std::endl;
+
+    std::cout << Vf <<std::endl;
+
+    std::cout << "Original" <<std::endl;
+
+    std::cout << vertices <<std::endl;
 
 
 
