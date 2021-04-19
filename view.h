@@ -4,6 +4,9 @@
 //#include "simulation.h"
 #include "graphics/camera.h"
 #include "graphics/Shader.h"
+#include "graphics/meshrenderer.h"
+#include "graphics/generalpipeline.h"
+#include "graphics/scene.h"
 
 #include <QGLWidget>
 #include <QElapsedTimer>
@@ -48,9 +51,11 @@ private:
     QTimer m_timer;
 
     //Simulation m_sim;
-    std::unique_ptr<CubifyMeshProcessor> _cubeProcessor;
+    std::unique_ptr<MeshRenderer> m_mesh;
+    GeneralPipeline m_renderer;
+    std::shared_ptr<Scene> m_scene;
 
-    Camera m_camera;
+    Camera *m_camera;
     Shader *m_shader;
 
     int m_forward, m_sideways, m_vertical;

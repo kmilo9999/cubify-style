@@ -13,6 +13,7 @@
 
 class Shader {
 public:
+    Shader();
     Shader(const std::string &vertexPath, const std::string &fragmentPath);
     Shader(const std::string &vertexPath, const std::string &geometryPath, const std::string &fragmentPath);
 
@@ -21,6 +22,8 @@ public:
     virtual ~Shader();
     Shader(Shader &&that);
     Shader& operator=(Shader &&that);
+
+    void linkAndCompile(const std::string &vertexPath, const std::string &fragmentPath);
 
     GLuint getUniformLocation(std::string name);
     GLuint getEnumeratedUniformLocation(std::string name, int index);

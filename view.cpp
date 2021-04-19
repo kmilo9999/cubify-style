@@ -1,6 +1,8 @@
 #include "view.h"
 
 #include "viewformat.h"
+#include "graphics/GraphicsDebug.h"
+#include "graphics/materials/toonmaterial.h"
 
 #include <QApplication>
 #include <QKeyEvent>
@@ -32,53 +34,46 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
 
 View::~View()
 {
-    delete m_shader;
+    // delete m_shader;
 }
 
 void View::initializeGL()
 {
-    glewExperimental = GL_TRUE;
-    if(glewInit() != GLEW_OK) {
-        std::cerr << "glew initialization failed" << std::endl;
-    }
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    
-    // alice blue
-    glClearColor(240.0f/255.0f, 248.0f/255.0f, 255.0f/255.0f, 1);
+    checkError();
+    m_scene = std::make_shared<Scene>();
+    m_renderer.init();
 
-    m_shader = new Shader(":/shaders/shader.vert", ":/shaders/shader.frag");
-    _cubeProcessor = std::make_unique<CubifyMeshProcessor>();
-    _cubeProcessor->init("");
-    //m_sim.init();
+    std::shared_ptr<Material> mat = std::make_shared<ToonMaterial>();
+    m_scene->addPrimitive("./meshes/sphere.obj", mat);
 
-    m_camera.setPosition(Eigen::Vector3f(0, 0, 5));
-    m_camera.lookAt(Eigen::Vector3f(0, 2, -5), Eigen::Vector3f(0, 2, 0), Eigen::Vector3f(0, 1, 0));
-    m_camera.setTarget(Eigen::Vector3f(0, 2, 0));
-    m_camera.setPerspective(120, width() / static_cast<float>(height()), 0.1, 50);
+    std::shared_ptr<ToonMaterial> mat2 = std::make_shared<ToonMaterial>();
+    mat2->loadDiffuseTexture("./meshes/pikachu.png");
+    mat = std::dynamic_pointer_cast<Material>(mat2);
+    m_scene->addPrimitive("./meshes/pikachu.obj", mat)->set_location(Eigen::Vector3f(1.5f, 0, 0));
+    checkError();
+    std::shared_ptr<DirectionalLight> lit = std::make_shared<DirectionalLight>(Eigen::Vector3f(0.5f, 0.5f, 0.5f), Eigen::Vector3f(-1.f, -1.f, 0.f));
+    m_scene->addLight(lit);
 
+    checkError();
+    m_camera = m_scene->getCam();
+    m_camera->setPosition(Eigen::Vector3f(0, 0, 5));
+    m_camera->lookAt(Eigen::Vector3f(0, 2, -5), Eigen::Vector3f(0, 2, 0), Eigen::Vector3f(0, 1, 0));
+    m_camera->setTarget(Eigen::Vector3f(0, 2, 0));
+    m_camera->setPerspective(120, width() / static_cast<float>(height()), 0.1, 50);
     m_time.start();
     m_timer.start(1000 / 60);
 }
 
 void View::paintGL()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    m_shader->bind();
-    Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
-    Eigen::Matrix4f mvp = m_camera.getProjection() * m_camera.getView();
-    m_shader->setUniform("m", model);
-    m_shader->setUniform("vp", mvp);
-    //m_sim.draw(m_shader);
-    _cubeProcessor->draw(m_shader);
-    m_shader->unbind();
+    m_renderer.render();
 }
 
 void View::resizeGL(int w, int h)
 {
-    glViewport(0, 0, w, h);
-    m_camera.setAspect(static_cast<float>(w) / h);
+    m_renderer.Resize(w, h);
+    //glViewport(0, 0, w, h);
+    //m_camera.setAspect(static_cast<float>(w) / h);
 }
 
 void View::mousePressEvent(QMouseEvent *event)
@@ -95,7 +90,7 @@ void View::mouseMoveEvent(QMouseEvent *event)
 
     if(m_capture) {
         if(deltaX != 0 || deltaY != 0) {
-            m_camera.rotate(-deltaX * 0.01f, deltaY * 0.01f);
+            m_camera->rotate(-deltaX * 0.01f, deltaY * 0.01f);
         }
     }
     m_lastX = event->x();
@@ -110,7 +105,7 @@ void View::mouseReleaseEvent(QMouseEvent *)
 void View::wheelEvent(QWheelEvent *event)
 {
     float zoom = 1 - event->delta() * 0.1f / 120;
-    m_camera.zoom(zoom);
+    m_camera->zoom(zoom);
 }
 
 void View::keyPressEvent(QKeyEvent *event)
@@ -125,7 +120,7 @@ void View::keyPressEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Escape) QApplication::quit();
 
     if(event->key() == Qt::Key_C) {
-        m_camera.toggleOrbit();
+        m_camera->toggleOrbit();
     }
     else if(event->key() == Qt::Key_W) {
         m_forward += 1;
@@ -194,13 +189,13 @@ void View::tick()
 
     }
 
-    auto look = m_camera.getLook();
+    auto look = m_camera->getLook();
     look.y() = 0;
     look.normalize();
     Eigen::Vector3f perp(-look.z(), 0, look.x());
     Eigen::Vector3f moveVec = m_forward * look + m_sideways * perp + m_vertical * Eigen::Vector3f::UnitY();
     moveVec *= seconds;
-    m_camera.move(moveVec);
+    m_camera->move(moveVec);
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();

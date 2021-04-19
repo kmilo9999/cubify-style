@@ -1,5 +1,4 @@
 #include "GraphicsDebug.h"
-
 #include <iostream>
 #include <vector>
 

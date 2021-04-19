@@ -28,12 +28,15 @@ public:
 
     const Eigen::Matrix4f& getView();
     const Eigen::Matrix4f& getProjection();
+    const Eigen::Matrix4f& getVP();
 
     const Eigen::Vector3f &getLook();
 
     void setOrbit(bool orbit);
     void toggleOrbit();
     bool isOrbit();
+
+    static Camera* main;
 
 private:
     void updateLook();
@@ -50,7 +53,7 @@ private:
     float m_fovY, m_aspect, m_near, m_far;
     float m_zoom;
 
-    Eigen::Matrix4f m_view, m_proj;
+    Eigen::Matrix4f m_view, m_proj, m_vp;
 
     bool m_orbit;
 };

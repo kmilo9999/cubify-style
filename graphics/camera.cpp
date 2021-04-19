@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+Camera* Camera::main = nullptr;
+
 Camera::Camera()
     : m_pitch(0), m_yaw(0),
       m_look(0, 0, 1),
@@ -14,7 +16,9 @@ Camera::Camera()
       m_proj(Eigen::Matrix4f::Identity()),
       m_orbit(false)
 {
-
+    if (main == nullptr) {
+        main = this;
+    }
 }
 
 void Camera::setPosition(const Eigen::Vector3f &pos)
@@ -133,6 +137,7 @@ const Eigen::Matrix4f &Camera::getView()
         m_view(3, 3) = 1.f;
         m_viewDirty = false;
     }
+    m_vp = m_proj * m_view;
     return m_view;
 }
 
@@ -150,7 +155,16 @@ const Eigen::Matrix4f &Camera::getProjection()
         m_proj(3, 3) = 0;
         m_projDirty = false;
     }
+    m_vp = m_proj * m_view;
     return m_proj;
+}
+
+const Eigen::Matrix4f &Camera::getVP()
+{
+    if (m_projDirty || m_viewDirty) {
+        m_vp = getProjection() * getView();
+    }
+    return m_vp;
 }
 
 const Eigen::Vector3f &Camera::getLook()

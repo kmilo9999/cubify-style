@@ -1,5 +1,5 @@
 #include "Shader.h"
-
+#include "graphics/materials/shaderlibrary.h"
 #include <QFile>
 #include <QString>
 #include <QTextStream>
@@ -9,13 +9,21 @@
 
 #include "GraphicsDebug.h"
 
+Shader::Shader() : m_programID(0)
+{
+    // empty shader
+}
+
 Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath)
 {
+    /**
     createProgramID();
     std::vector<GLuint> shaders;
     shaders.push_back(createVertexShaderFromSource(getFileContents(vertexPath)));
     shaders.push_back(createFragmentShaderFromSource(getFileContents(fragmentPath)));
     buildShaderProgramFromShaders(shaders);
+    discoverShaderData();*/
+    m_programID = ShaderLibrary::getInstance()->tryGetProgram(vertexPath, fragmentPath);
     discoverShaderData();
 }
 
@@ -31,7 +39,9 @@ Shader::Shader(const std::string &vertexPath, const std::string &geometryPath, c
 
 Shader::~Shader()
 {
-    glDeleteProgram(m_programID);
+    if (m_programID > 0) {
+        glDeleteProgram(m_programID);
+    }
 }
 
 Shader::Shader(Shader &&that) :
@@ -52,6 +62,14 @@ Shader& Shader::operator=(Shader &&that) {
     that.m_programID = 0;
 
     return *this;
+}
+
+void Shader::linkAndCompile(const std::string &vertexPath, const std::string &fragmentPath)
+{
+    if (m_programID == 0) {
+        m_programID = ShaderLibrary::getInstance()->tryGetProgram(vertexPath, fragmentPath);
+        discoverShaderData();
+    }
 }
 
 void Shader::bind() const {
@@ -76,7 +94,9 @@ void Shader::setUniform(const std::string &name, float f) {
 }
 
 void Shader::setUniform(const std::string &name, int i) {
+    GLenum err = glGetError();
     glUniform1i(m_uniforms[name], i);
+    err = glGetError();
 }
 
 void Shader::setUniform(const std::string &name, bool b) {

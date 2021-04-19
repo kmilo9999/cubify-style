@@ -20,6 +20,26 @@ win32 {
 
 SOURCES += \
         cubifymeshprocessor.cpp \
+        graphics/datatypes/aabox.cpp \
+        graphics/datatypes/frustum.cpp \
+        graphics/generalpipeline.cpp \
+        graphics/lights/light.cpp \
+        graphics/materials/material.cpp \
+        graphics/materials/shaderlibrary.cpp \
+        graphics/materials/toonmaterial.cpp \
+        graphics/mesh.cpp \
+        graphics/meshrenderer.cpp \
+        graphics/pass/basepass.cpp \
+        graphics/pass/lightuniformpass.cpp \
+        graphics/pass/postprocess.cpp \
+        graphics/pass/posttonemapping.cpp \
+        graphics/pass/renderpass.cpp \
+        graphics/pass/shadowcasterpass.cpp \
+        graphics/pass/uniformpass.cpp \
+        graphics/scene.cpp \
+        graphics/textures/msaarendertarget.cpp \
+        graphics/textures/rendertarget.cpp \
+        graphics/textures/texture2d.cpp \
         libs/glew-1.10.0/src/glew.c \
         graphics/GraphicsDebug.cpp \
         graphics/MeshLoader.cpp \
@@ -43,7 +63,29 @@ HEADERS += \
     graphics/Shader.h \
     graphics/ShaderAttribLocations.h \
     graphics/camera.h \
+    graphics/datatypes/aabox.h \
+    graphics/datatypes/frustum.h \
+    graphics/dtype.h \
+    graphics/generalpipeline.h \
+    graphics/lights/light.h \
+    graphics/materials/material.h \
+    graphics/materials/shaderlibrary.h \
+    graphics/materials/toonmaterial.h \
+    graphics/mesh.h \
+    graphics/meshrenderer.h \
+    graphics/pass/basepass.h \
+    graphics/pass/lightuniformpass.h \
+    graphics/pass/postprocess.h \
+    graphics/pass/posttonemapping.h \
+    graphics/pass/renderpass.h \
+    graphics/pass/shadowcasterpass.h \
+    graphics/pass/uniformpass.h \
+    graphics/scene.h \
     graphics/shape.h \
+    graphics/textures/msaarendertarget.h \
+    graphics/textures/rendertarget.h \
+    graphics/textures/stb_image.h \
+    graphics/textures/texture2d.h \
     mainwindow.h \
     ui_mainwindow.h \
     view.h \
