@@ -75,11 +75,59 @@ MeshRenderer& MeshRenderer::set_location(const Eigen::Vector3f &pos)
     return *this;
 }
 
+MeshRenderer& MeshRenderer::translate(const Eigen::Vector3f &translation)
+{
+    m_pos = m_pos + translation;
+    m_trans.translation() = m_pos;
+    return *this;
+}
+
 MeshRenderer& MeshRenderer::set_scale(const Eigen::Vector3f &scale)
 {
     m_scale = scale;
     m_trans.scale(m_scale);
     return *this;
+}
+
+MeshRenderer& MeshRenderer::set_rotation(const Eigen::Quaternionf rotation)
+{
+    m_rot = rotation;
+    Eigen::Matrix4f transformation(Eigen::Matrix4f::Identity());
+    transformation.block(0,0,3,3) = m_rot.toRotationMatrix() * Eigen::Scaling(m_scale);
+    transformation.block(0,3,3,1) = m_pos;
+    m_trans.matrix() = transformation;
+    return *this;
+}
+
+MeshRenderer& MeshRenderer::set_rotation(float angle_x, float angle_y, float angle_z)
+{
+    Eigen::Quaternionf rot = Eigen::AngleAxis(angle_z, Eigen::Vector3f::UnitZ()) *
+            Eigen::AngleAxis(angle_y, Eigen::Vector3f::UnitY()) *
+            Eigen::AngleAxis(angle_x, Eigen::Vector3f::UnitX());
+    return set_rotation(rot);
+}
+
+MeshRenderer& MeshRenderer::rotate(float angle_x, float angle_y, float angle_z)
+{
+    Eigen::Quaternionf rot = Eigen::AngleAxis(angle_z, Eigen::Vector3f::UnitZ()) *
+            Eigen::AngleAxis(angle_y, Eigen::Vector3f::UnitY()) *
+            Eigen::AngleAxis(angle_x, Eigen::Vector3f::UnitX());
+    return set_rotation(rot * m_rot);
+}
+
+Eigen::Vector3f MeshRenderer::get_location() const
+{
+    return m_pos;
+}
+
+Eigen::Vector3f MeshRenderer::get_scale() const
+{
+    return m_scale;
+}
+
+Eigen::Quaternionf MeshRenderer::get_rotation() const
+{
+    return m_rot;
 }
 
 std::shared_ptr<Mesh> MeshRenderer::getMesh()

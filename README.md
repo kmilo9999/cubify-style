@@ -5,6 +5,10 @@ Download [libigl](https://github.com/libigl/libigl) and place it in the libs fol
 Rendering Instruction:
 The scene is defined in DemoScene.cpp under graphics/scenes/DemoScene.cpp. I suggest you only modify this file.
 
+**You can add new geometry in constructor since after it, the added primitives will be passed to cubifyprocessor, so the primitives you add later is not likely to be passed to cubifyprocessor**
+
+**DemoScene::tick is where you can update the scene. The function is called every frame and the delta time is the time after the last frame in second.**
+
 **The cubify process will automatically start and you can press P to pause or resume it.**
 
 You can modify the constructor of DemoScene to add geometries.
@@ -66,3 +70,24 @@ ToonMaterial::loadDiffuseTexture(const std::string& texture_path)
 
 Then the shader will use this texture.
 
+## MeshRenderer
+
+MeshRenderer is the class which combines the material and mesh objects.
+It is also where you can set the translation. Here is some functions for you.
+
+|Functions|Input|Usage|
+|---|---|---|
+|get_transform|return the Affine3f|Get the transformation of the object|
+|set_location|new Vector3f position|Set the position of the object|
+|translate|the Vector3f translation|Move the object by the translation|
+|get_rotation|Quaternionf|Get the rotation quaternion|
+|set_rotation|3 euler angles or quaternion|Set new rotation|
+|rotate|3 euler angles|rotate the object via Euler angles|
+|get_scale|return Vector3f scale|Get the scale of the object|
+|set_scale|new Vector3f scale|Set the scale of the object|
+
+These transformation functions all return MeshRenderer reference except for get_xxx functions, so you can call them in chain.
+
+```
+MeshRenderer->translate(xxx)->rotate(xxx)->set_scale(xxx)
+```

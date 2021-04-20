@@ -49,6 +49,9 @@ void Scene::addLight(const std::shared_ptr<Light> &light)
     m_lights.emplace_back(light);
 }
 
+void Scene::tick(float delta_time)
+{}
+
 AABox Scene::getBoundingBox() const
 {
     AABox ret;

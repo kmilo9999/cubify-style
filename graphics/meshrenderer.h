@@ -31,6 +31,14 @@ public:
 
     MeshRenderer& set_location(const Eigen::Vector3f& pos);
     MeshRenderer& set_scale(const Eigen::Vector3f& scale);
+    MeshRenderer& set_rotation(const Eigen::Quaternionf rotation);
+    MeshRenderer& set_rotation(float angle_x, float angle_y, float angle_z);
+    MeshRenderer& translate(const Eigen::Vector3f& translation);
+    MeshRenderer& rotate(float angle_x, float angle_y, float angle_z);
+
+    Eigen::Vector3f get_scale() const;
+    Eigen::Vector3f get_location() const;
+    Eigen::Quaternionf get_rotation() const;
 
     std::shared_ptr<Mesh> getMesh();
 

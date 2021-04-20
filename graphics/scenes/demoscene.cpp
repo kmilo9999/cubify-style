@@ -37,3 +37,12 @@ void DemoScene::getCubifyMeshes(std::vector<std::shared_ptr<Mesh> > &meshes)
             meshes.emplace_back(m_objects[i]->getMesh());
     }
 }
+
+void DemoScene::tick(float delta_time)
+{
+    // if you need to modify the scene.
+
+    // rotation demo
+    if (m_objects.size() > 0)
+        m_objects[0]->rotate(0, 0.2f * delta_time, 0);
+}

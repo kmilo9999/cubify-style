@@ -14,6 +14,8 @@ public:
 
     void getCubifyMeshes(std::vector<std::shared_ptr<Mesh>>& meshes);
 
+    virtual void tick(float delta_time) override;
+
 private:
     std::set<std::shared_ptr<MeshRenderer>> m_noCubifySet;
 };

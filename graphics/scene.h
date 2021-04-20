@@ -28,6 +28,8 @@ public:
 
     static Scene* mainScene;
 
+    virtual void tick(float delta_time);
+
 protected:
     Camera m_cam;
     std::vector<std::shared_ptr<MeshRenderer>> m_objects;

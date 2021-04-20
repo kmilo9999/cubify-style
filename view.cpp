@@ -203,7 +203,7 @@ void View::keyReleaseEvent(QKeyEvent *event)
 void View::tick()
 {
     float seconds = m_time.restart() * 0.001f;
-
+    m_scene->tick(seconds);
     if(!_pause)
     {
      //   m_sim.update(seconds);
