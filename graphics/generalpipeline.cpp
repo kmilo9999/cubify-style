@@ -47,7 +47,7 @@ void GeneralPipeline::init()
 
 void GeneralPipeline::Resize(int width, int height)
 {
-    Scene* m_scene = Scene::main;
+    Scene* m_scene = Scene::mainScene;
     m_width = width;
     m_height = height;
     glViewport(0, 0, width, height);
@@ -62,7 +62,7 @@ void GeneralPipeline::Resize(int width, int height)
 
 void GeneralPipeline::render()
 {
-    if (Scene::main == nullptr) {
+    if (Scene::mainScene == nullptr) {
         std::cout << "No scene is binded to render" << std::endl;
         return;
     }

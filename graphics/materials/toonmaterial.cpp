@@ -3,7 +3,7 @@
 #include "graphics/camera.h"
 
 ToonMaterial::ToonMaterial() : Material(), diffuseColor(1.0, 1.0, 1.0), specularColor(1.0, 1.0, 1.0),
-    ambientColor(0.2, 0.2, 0.2), sssColor(0.8, 0.3, 0.4), specularPower(20.f), sssPower(1.f), sssRadius(0.3f),
+    ambientColor(0.2, 0.2, 0.2), sssColor(0.4, 0.1, 0.1), specularPower(20.f), sssPower(.2f), sssRadius(0.1f),
     colorLevels(-0.3f, 0.4f, 1.f), colorPowers(0.1f, 0.5f, 0.9f, 1.f), colorRadius(0.05f, 0.05f, 0.02f)
 {
     getShaders(this);
@@ -23,6 +23,12 @@ void ToonMaterial::loadDiffuseTexture(const std::string &texPath)
 void ToonMaterial::updateProperty()
 {
     m_shader->bind();
+    updatePropertyWhenBind();
+    m_shader->unbind();
+}
+
+void ToonMaterial::updatePropertyWhenBind()
+{
     m_shader->setUniform("diffuseTex", (int)0);
     m_shader->setUniform("diffuseColor", diffuseColor);
     m_shader->setUniform("specularColor", specularColor);
@@ -34,12 +40,11 @@ void ToonMaterial::updateProperty()
     m_shader->setUniform("colorLevels", colorLevels);
     m_shader->setUniform("colorPowers", colorPowers);
     m_shader->setUniform("colorRadius", colorRadius);
-    m_shader->unbind();
 }
 
 void ToonMaterial::getShaders(ToonMaterial *object)
 {
-    static std::shared_ptr<Shader> shader1 = std::make_shared<Shader>("./shaders/toon.vert", "./shaders/toon.frag");
+    static std::shared_ptr<Shader> shader1 = std::make_shared<Shader>(":/shaders/toon.vert", ":/shaders/toon.frag");
     static std::shared_ptr<Shader> shader2 = std::make_shared<Shader>(":/shaders/outline.vert", ":/shaders/outline.frag");
     object->m_shader = shader1;
     object->m_outlineShader = shader2;
@@ -57,13 +62,14 @@ void ToonMaterial::bind(int pass)
     case 0:
         glCullFace(GL_BACK);
         m_shader->bind();
-        m_shader->setUniform("vp", Scene::main->getCam()->getVP());
+        updatePropertyWhenBind();
+        m_shader->setUniform("vp", Scene::mainScene->getCam()->getVP());
         diffuseTex.activate(0);
         break;
     case 1:
         glCullFace(GL_FRONT);
         m_outlineShader->bind();
-        m_outlineShader->setUniform("vp", Scene::main->getCam()->getVP());
+        m_outlineShader->setUniform("vp", Scene::mainScene->getCam()->getVP());
         break;
     }
 }

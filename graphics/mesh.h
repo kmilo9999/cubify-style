@@ -21,6 +21,8 @@ public:
     virtual ~Mesh();
 
     void update(MatrixNr& v, MatrixNi& f);              // update data
+    void update(MatrixNr& v, MatrixNr& n);
+    void update(MatrixNr& v);
     bool load_mesh(const std::string& file_path);       // load mesh
     void draw() const;
 
@@ -30,6 +32,9 @@ public:
     bool getDirtyFlag();
 
     static std::shared_ptr<Mesh> createQuad();
+
+    const MatrixNr getVerticeMatrix() const;
+    const MatrixNi getFaceMatrix() const;
 
 private:
     MatrixNr m_v;       // vertices

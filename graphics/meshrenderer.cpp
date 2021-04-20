@@ -81,3 +81,8 @@ MeshRenderer& MeshRenderer::set_scale(const Eigen::Vector3f &scale)
     m_trans.scale(m_scale);
     return *this;
 }
+
+std::shared_ptr<Mesh> MeshRenderer::getMesh()
+{
+    return m_mesh;
+}

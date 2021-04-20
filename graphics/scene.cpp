@@ -1,11 +1,11 @@
 #include "scene.h"
 
-Scene* Scene::main = nullptr;
+Scene* Scene::mainScene = nullptr;
 
 Scene::Scene()
 {
-    if (main == nullptr) {
-        main = this;
+    if (mainScene == nullptr) {
+        mainScene = this;
     }
 }
 

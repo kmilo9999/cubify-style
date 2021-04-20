@@ -19,5 +19,5 @@ void main(void)
     vs_out.positionWS = positionWS.xyz / positionWS.w;
     vec4 normalWS = vec4(normalize(mat3(transpose(inverse(m))) * normal), 0);
     vs_out.normalWS = normalWS.xyz;
-    gl_Position = vp * (positionWS + normalWS * 0.05);
+    gl_Position = vp * (positionWS + normalWS * 0.03);
 }

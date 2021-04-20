@@ -46,6 +46,24 @@ void Mesh::update(MatrixNr &v, MatrixNi &f)
     m_isDirty = true;
 }
 
+void Mesh::update(MatrixNr &v, MatrixNr &n)
+{
+    m_v = v;
+    m_norm = n;
+    updateOpenGL();
+    updateBBox();
+    m_isDirty = true;
+}
+
+void Mesh::update(MatrixNr &v)
+{
+    m_v = v;
+    igl::per_vertex_normals(m_v, m_f, m_norm);
+    updateOpenGL();
+    updateBBox();
+    m_isDirty = true;
+}
+
 bool Mesh::getDirtyFlag()
 {
     if (m_isDirty) {
@@ -220,4 +238,14 @@ bool Mesh::load_mesh(const std::string &file_path)
     updateBBox();
     m_isDirty = true;
     return true;
+}
+
+const MatrixNr Mesh::getVerticeMatrix() const
+{
+    return m_v;
+}
+
+const MatrixNi Mesh::getFaceMatrix() const
+{
+    return m_f;
 }

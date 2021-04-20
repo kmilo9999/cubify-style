@@ -26,7 +26,7 @@ public:
     const std::vector<std::shared_ptr<MeshRenderer>>& getPrimitives() const;
     const std::vector<std::shared_ptr<Light>>& getLights() const;
 
-    static Scene* main;
+    static Scene* mainScene;
 
 protected:
     Camera m_cam;

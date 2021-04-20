@@ -30,7 +30,7 @@ LightUniformPass::~LightUniformPass()
 
 void LightUniformPass::execute()
 {
-    Scene* m_scene = Scene::main;
+    Scene* m_scene = Scene::mainScene;
     const std::vector<std::shared_ptr<Light>>& lights = m_scene->getLights();
     m_data.number = std::min(4, (int)lights.size());
 

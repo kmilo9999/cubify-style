@@ -6,12 +6,15 @@
 #include "graphics/Shader.h"
 #include "graphics/meshrenderer.h"
 #include "graphics/generalpipeline.h"
-#include "graphics/scene.h"
+#include "graphics/scenes/demoscene.h"
+#include "cubify/cubifythread.h"
 
 #include <QGLWidget>
 #include <QElapsedTimer>
 #include <QTimer>
 #include <memory>
+
+#include <vector>
 
 /**
  * This is similar to your "CS1971FrontEnd" class. Here you will receive all of the input events
@@ -50,13 +53,12 @@ private:
     QElapsedTimer m_time;
     QTimer m_timer;
 
-    //Simulation m_sim;
-    std::unique_ptr<MeshRenderer> m_mesh;
     GeneralPipeline m_renderer;
-    std::shared_ptr<Scene> m_scene;
+    std::shared_ptr<DemoScene> m_scene;
+
+    std::vector<CubifyData*> m_updateQueue;
 
     Camera *m_camera;
-    Shader *m_shader;
 
     int m_forward, m_sideways, m_vertical;
 
@@ -65,6 +67,10 @@ private:
     bool m_capture;
     bool _pause;
 
+    CubifyThread* m_thread;
+
+public slots:
+    void meshUpdate(CubifyData* data);
 
 private slots:
     void tick();

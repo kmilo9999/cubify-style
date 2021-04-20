@@ -3,8 +3,10 @@ QT += core gui opengl
 TARGET = cubify-style
 TEMPLATE = app
 
-CONFIG += c++17 console
+CONFIG += c++17
 CONFIG -= app_bundle
+
+QMAKE_CXXFLAGS += -Wa,-mbig-obj
 
 unix:!macx {
     LIBS += -lGLU
@@ -19,6 +21,8 @@ win32 {
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        cubify/cubifydata.cpp \
+        cubify/cubifythread.cpp \
         cubifymeshprocessor.cpp \
         graphics/datatypes/aabox.cpp \
         graphics/datatypes/frustum.cpp \
@@ -37,6 +41,7 @@ SOURCES += \
         graphics/pass/shadowcasterpass.cpp \
         graphics/pass/uniformpass.cpp \
         graphics/scene.cpp \
+        graphics/scenes/demoscene.cpp \
         graphics/textures/msaarendertarget.cpp \
         graphics/textures/rendertarget.cpp \
         graphics/textures/texture2d.cpp \
@@ -57,6 +62,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    cubify/cubifydata.h \
+    cubify/cubifythread.h \
     cubifymeshprocessor.h \
     graphics/GraphicsDebug.h \
     graphics/MeshLoader.h \
@@ -81,6 +88,7 @@ HEADERS += \
     graphics/pass/shadowcasterpass.h \
     graphics/pass/uniformpass.h \
     graphics/scene.h \
+    graphics/scenes/demoscene.h \
     graphics/shape.h \
     graphics/textures/msaarendertarget.h \
     graphics/textures/rendertarget.h \

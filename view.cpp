@@ -1,3 +1,4 @@
+#include <iostream>
 #include "view.h"
 
 #include "viewformat.h"
@@ -35,37 +36,50 @@ View::View(QWidget *parent) : QGLWidget(ViewFormat(), parent),
 View::~View()
 {
     // delete m_shader;
+    if (m_thread && m_thread->isRunning()) {
+        m_thread->softStop();
+        m_thread->terminate();
+        m_thread->wait();
+    }
+
+    if (m_thread)
+        m_thread->deleteLater();
 }
 
 void View::initializeGL()
 {
     checkError();
-    m_scene = std::make_shared<Scene>();
     m_renderer.init();
 
-    std::shared_ptr<Material> mat = std::make_shared<ToonMaterial>();
-    m_scene->addPrimitive("./meshes/sphere.obj", mat);
+    m_scene = std::make_shared<DemoScene>();
+    Scene::mainScene = m_scene.get();
 
-    std::shared_ptr<ToonMaterial> mat2 = std::make_shared<ToonMaterial>();
-    mat2->loadDiffuseTexture("./meshes/pikachu.png");
-    mat = std::dynamic_pointer_cast<Material>(mat2);
-    m_scene->addPrimitive("./meshes/pikachu.obj", mat)->set_location(Eigen::Vector3f(1.5f, 0, 0));
-    checkError();
-    std::shared_ptr<DirectionalLight> lit = std::make_shared<DirectionalLight>(Eigen::Vector3f(0.5f, 0.5f, 0.5f), Eigen::Vector3f(-1.f, -1.f, 0.f));
-    m_scene->addLight(lit);
-
-    checkError();
     m_camera = m_scene->getCam();
-    m_camera->setPosition(Eigen::Vector3f(0, 0, 5));
-    m_camera->lookAt(Eigen::Vector3f(0, 2, -5), Eigen::Vector3f(0, 2, 0), Eigen::Vector3f(0, 1, 0));
-    m_camera->setTarget(Eigen::Vector3f(0, 2, 0));
-    m_camera->setPerspective(120, width() / static_cast<float>(height()), 0.1, 50);
+    m_scene->getCam()->setPerspective(120, width() / static_cast<float>(height()), 0.1, 50);
     m_time.start();
     m_timer.start(1000 / 60);
+
+    // create thread
+    m_thread = new CubifyThread(this);
+    connect(m_thread, &CubifyThread::updateReady, this, &View::meshUpdate);
+
+    // set inputs
+    std::vector<std::shared_ptr<Mesh>> cubify_meshes;
+    m_scene->getCubifyMeshes(cubify_meshes);
+    m_thread->setInput(cubify_meshes);
+    m_thread->start();
 }
 
 void View::paintGL()
 {
+    // for each render loop, update meshes
+    for (size_t i = 0; i < m_updateQueue.size(); ++i) {
+        CubifyData* data = m_updateQueue[i];
+        data->ptr->update(data->V, data->F);
+        data->updated = false;
+    }
+    m_updateQueue.clear();
+
     m_renderer.render();
 }
 
@@ -142,6 +156,14 @@ void View::keyPressEvent(QKeyEvent *event)
     }else if(event->key() == Qt::Key_Space) {
         _pause = !_pause;
     }
+    else if (event->key() == Qt::Key_P) {
+        if (m_thread->isRunning()) {
+            m_thread->softStop();
+        }
+        if (m_thread->isFinished()) {
+            m_thread->start();
+        }
+    }
     else if(event->key() == Qt::Key_T) {
         //m_sim.toggleWire();
     }
@@ -199,4 +221,10 @@ void View::tick()
 
     // Flag this view for repainting (Qt will call paintGL() soon after)
     update();
+}
+
+void View::meshUpdate(CubifyData* data)
+{
+    std::cout << "Mesh Update is called" << std::endl;
+    m_updateQueue.push_back(data);
 }

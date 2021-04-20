@@ -40,6 +40,8 @@ protected:
     Eigen::Vector4f colorPowers;
     Eigen::Vector3f colorRadius;
 
+    void updatePropertyWhenBind();
+
     Texture2D diffuseTex;
 
 private:

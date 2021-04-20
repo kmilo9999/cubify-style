@@ -32,6 +32,8 @@ public:
     MeshRenderer& set_location(const Eigen::Vector3f& pos);
     MeshRenderer& set_scale(const Eigen::Vector3f& scale);
 
+    std::shared_ptr<Mesh> getMesh();
+
 private:
     std::shared_ptr<Mesh> m_mesh;
     std::shared_ptr<Material> m_mat;
