@@ -33,6 +33,7 @@ void DemoScene::getCubifyMeshes(std::vector<std::shared_ptr<Mesh> > &meshes)
 {
     meshes.clear();
     for (size_t i = 0; i < m_objects.size(); ++i) {
-        meshes.emplace_back(m_objects[i]->getMesh());
+        if (m_noCubifySet.find(m_objects[i]) == m_noCubifySet.end())
+            meshes.emplace_back(m_objects[i]->getMesh());
     }
 }
