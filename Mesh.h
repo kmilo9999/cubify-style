@@ -24,6 +24,8 @@ public:
 
     int _numVertices;
     int _numFaces;
+
+    double _relaviteDisplacement;
 };
 
 #endif // MESH_H

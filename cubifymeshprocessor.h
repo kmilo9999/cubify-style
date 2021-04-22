@@ -27,7 +27,7 @@ public:
                                const Eigen::MatrixXd& weigth, const Eigen::MatrixXd& du,
                                const Eigen::MatrixXd& displacement,Eigen::Matrix3d& out);
 
-    void globalStep(const Eigen::MatrixXd& V,const Eigen::MatrixXi& F,
+    double globalStep(const Eigen::MatrixXd& V,const Eigen::MatrixXi& F,
                      std::vector<Eigen::Matrix3d>& rots,
                     Eigen::MatrixXd& Vf);
     void genTestRotations(const Eigen::MatrixXd& vertices,std::vector<Eigen::Matrix3d>& rots);

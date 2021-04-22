@@ -16,7 +16,11 @@
 #include <igl/svd3x3.h>
 #include <igl/rotation_matrix_from_directions.h>
 #include <igl/writeOBJ.h>
+
 #include "Mesh.h"
+
+#include <QApplication>
+
 
 
 CubifyMeshProcessor::CubifyMeshProcessor()
@@ -32,55 +36,117 @@ CubifyMeshProcessor::~CubifyMeshProcessor()
 void CubifyMeshProcessor::init(std::string filename)
 {
 
+
+    QString mesh = QApplication::arguments()[1];
+    QString numIterations = QApplication::arguments()[2];
+    int numIterationsInt = atoi(numIterations.toUtf8().constData());
+    std::cout <<  mesh.toUtf8().constData() << std::endl;
+    std::cout <<  numIterationsInt << std::endl;
+
+
     Eigen::MatrixXd V;
 
     Eigen::MatrixXi F;
 
 
-    igl::read_triangle_mesh("./meshes/Cube3.obj", V, F);
-//    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
-//    igl::read_triangle_mesh("./meshes/bean.obj", V, F);
+    if (mesh == "bunny"){
+       igl::read_triangle_mesh("./meshes/bunny.obj", V, F);
 
+    }
+    else if (mesh == "sphere"){
+       igl::read_triangle_mesh("./meshes/sphere.obj", V, F);
+
+    }
+    else if (mesh == "cow"){
+       igl::read_triangle_mesh("./meshes/cow.obj", V, F);
+
+    }
+    else if (mesh == "bean"){
+       igl::read_triangle_mesh("./meshes/bean.obj", V, F);
+
+    }
     _mesh = std::make_unique<Mesh>();
     _mesh->preProcess(V,F);
 
 
-    Eigen::MatrixXd U = V ;
+//    std::vector<Eigen::Matrix3d> testRots;
 
-    std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
+//    genTestRotations(V,testRots);
+//    Eigen::MatrixXd Vf;
+//    Vf.resize(V.rows(),3);
+//    Eigen::MatrixXd U = V ;
 
-    localStep(V,U,F,RotationsXVertex);
-
-    std::vector<Eigen::Matrix3d> testRots;
-
-    genTestRotations(V,testRots);
-
-    //globalStep(V,F,E, testRots);
-
-    Eigen::MatrixXd Vf;
-    Vf.resize(V.rows(),3);
-    std::cout << "RotationsXVertex" <<std::endl;
-
-    std::cout << RotationsXVertex[0] <<std::endl;
-
-  globalStep(V,F, testRots, Vf);
+//    for ( int i = 0; i < numIterationsInt; i++){
 
 
-//    std::cout << V <<std::endl;
+//        std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
 
-//    Eigen::Vector3d first;
-//    first << V(0) ,V(8),V(16);
+//        localStep(V,U,F,RotationsXVertex);
 
 
-//    std::cout << first <<std::endl;
 
-//    first = first.transpose() * testRots[0];
-//    std::cout << first <<std::endl;
-//    V(0) = first[0];
-//    V(8) = first[1];
-//    V(16) = first[2];
 
-//    std::cout << V <<std::endl;
+//        std::cout << "RotationsXVertex" <<std::endl;
+//        std::cout << "RotationsXVertex" <<std::endl;
+
+
+//       double delta = globalStep(V,F, RotationsXVertex, U);
+//       if( delta < 1e-3)
+//       {
+//           Vf = U;
+//           break;
+//       }
+//      std::cout << i << std::endl;
+
+//    }
+
+     Eigen::MatrixXd Vf;
+      Eigen::MatrixXd U = V ;
+    for ( size_t i = 0; i < numIterationsInt; i++){
+
+
+
+           std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
+
+           localStep(V,U,F,RotationsXVertex);
+
+
+
+           Vf.resize(V.rows(),3);
+           std::cout << "RotationsXVertex" <<std::endl;
+           std::cout << "RotationsXVertex" <<std::endl;
+
+
+          double delta =  globalStep(V,F, RotationsXVertex, Vf);
+          if( delta < 1e-3)
+          {
+             //Vf = U;
+              break;
+          }
+         std::cout << i << std::endl;
+         U = Vf;
+         //V = Vf;
+       }
+
+
+  if (mesh == "bunny"){
+      igl::writeOBJ("./meshes/bunnyCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "sphere"){
+      igl::writeOBJ("./meshes/sphereCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "cow"){
+      igl::writeOBJ("./meshes/cowCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "bean"){
+      igl::writeOBJ("./meshes/beanCUBY.obj",Vf,F);
+
+  }
+
+
 
 
 
@@ -89,7 +155,6 @@ void CubifyMeshProcessor::init(std::string filename)
 
      checkError();
 
-     igl::writeOBJ("./meshes/cub3CUBY.obj",Vf,F);
     _shape->init(Vf,F);
 
 
@@ -134,10 +199,12 @@ void CubifyMeshProcessor::genTestRotations(const Eigen::MatrixXd& vertices,
                             -0.25f , 0.0f , 0.96f;
 
 
-//    rotations[0] = fifteendegreeRotPitch;
 
     for (size_t i = 0; i <  rotations.size(); i++){
-        std::cout << rotations[i] <<std::endl <<std::endl;
+//        if (i % 3 == 0){
+//            rotations[0] = fifteendegreeRotPitch;
+//        }
+
 
     }
     rots = rotations;
@@ -211,7 +278,7 @@ void CubifyMeshProcessor::genTestRotations(const Eigen::MatrixXd& vertices,
 
 //}
 
-void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,
+double CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,
                                      std::vector<Eigen::Matrix3d>& rots,
                                      Eigen::MatrixXd& Vf)
 {
@@ -236,8 +303,8 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
     Eigen::MatrixXd myMat(numVertices,numVertices);
 
-    for (size_t i = 0; i < numVertices; i++){
-        for (size_t j = 0; j < numVertices; j++){
+    for (int i = 0; i < numVertices; i++){
+        for (int j = 0; j < numVertices; j++){
 
             myMat ( i,j ) = 0.0;
         }
@@ -285,10 +352,12 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
     std::cout << "Checkpoint" <<std::endl;
 
 
-    std::cout << numVertices <<std::endl;
+   // std::cout << numVertices <<std::endl;
 
-    std::cout << myMat <<std::endl;
-    //std::cout << cotangentW <<std::endl;
+
+//    std::cout << myMat <<std::endl;
+//    std::cout << cotangentW <<std::endl;
+
 
     Eigen::MatrixXd LTEST(numVertices,numVertices);
 
@@ -297,14 +366,17 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
 
 
-    //LTEST = myMat*cotangentW;
-    LTEST = myMat*_mesh->_cotangentWeigths;
 
-    std::cout << myMat.inverse() <<std::endl;
-    std::cout << LTEST <<std::endl;
-    std::cout << LTEST.transpose() <<std::endl;
+    LTEST = _mesh->_cotangentWeigths;
+    //LTEST = cotangentW;
+//    LTEST = myMat*cotangentW;
 
-    std::cout << LTEST+LTEST.transpose() <<std::endl;
+
+
+//    std::cout << LTEST <<std::endl;
+//    std::cout << LTEST.transpose() <<std::endl;
+
+//    std::cout << LTEST+LTEST.transpose() <<std::endl;
 
 
 
@@ -342,7 +414,8 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
             Eigen::Matrix3d R_j = rots[j];
 
               P_j =  vertices.row(j);
-     //       std::cout << P_j <<std::endl;
+
+
 
             float curWeight = _mesh->_cotangentWeigths.coeff(i,j);
 
@@ -355,6 +428,8 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
             b_i += (curWeight/2.0)*R_sum*P_diff;
 
 
+//          std::cout << P_diff <<std::endl;
+//          std::cout << R_sum <<std::endl;
 
 
 
@@ -367,51 +442,59 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
     std::cout << "Bs-------------" <<std::endl;
 
-    std::cout << Bs <<std::endl;
-    std::cout << Bs.size() <<std::endl;
+ //   std::cout << Bs <<std::endl;
+  //  std::cout << Bs.size() <<std::endl;
 
 
 
     Eigen::Vector3d  curVert;
     curVert << vertices(0), vertices(8), vertices(16);
-    std::cout << curVert <<std::endl;
+//    std::cout << curVert <<std::endl;
     Eigen::MatrixXd LTESTSUM(numVertices,numVertices);
 
-    LTESTSUM= LTEST+LTEST.transpose();
+//    LTESTSUM= LTEST+LTEST.transpose();
 
 //    LTEST += LTESTT;
-    std::cout << "LTESTSUM" <<std::endl;
-
-    std::cout << LTESTSUM <<std::endl;
 
 
+
+
+    Eigen::MatrixXd U = Vf;
     for (size_t i = 0 ; i < 3; i++){
 
 
            Eigen::MatrixXd L(numVertices, numVertices);
-           L = LTESTSUM/2;
+           L = LTEST;
 
 
 
-           std::cout << "B" << std::endl <<std::endl;
-           std::cout << Bs.col(0) << std::endl;
-           std::cout << "L" << std::endl <<std::endl;
+//           std::cout << "B" << std::endl <<std::endl;
+//           std::cout << Bs.col(0) << std::endl;
+//           std::cout << "L" << std::endl <<std::endl;
 
-           std::cout << L << std::endl;
+//           std::cout << cotangentW << std::endl;
+           Eigen::LeastSquaresConjugateGradient<Eigen::SparseMatrix<double> > lscg;
+           lscg.compute(_mesh->_cotangentWeigths);
+           Eigen::VectorXd x = lscg.solve(Bs.col(i));
+           std::cout << "#iterations:     " << lscg.iterations() << std::endl;
+           std::cout << "estimated error: " << lscg.error()      << std::endl;
 
 
-           Eigen::VectorXd x = L.colPivHouseholderQr().solve(Bs.col(i));
-           std::cout << "The solution is:\n" << x << std::endl;
+
+
+//           Eigen::VectorXd x = cotangentW.colPivHouseholderQr().solve(Bs.col(i));
+//           std::cout << "The solution is:\n" << x << std::endl;
            Vf.col(i) = -x;
     }
     std::cout << "newVerts" <<std::endl;
 
-    std::cout << Vf <<std::endl;
+    std::cout << Vf.row(0) <<std::endl;
 
     std::cout << "Original" <<std::endl;
 
-    std::cout << vertices <<std::endl;
+    std::cout << vertices.row(0) <<std::endl;
 
+    return  (U - Vf).lpNorm<Eigen::Infinity>()  / (Vf-vertices).lpNorm<Eigen::Infinity>();
 
 
 
@@ -439,7 +522,7 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
     rhos.setConstant(1e-4);
 
 
-    double lambda = 0.025;
+    double lambda = 0.5;
 
 
     for(int i=0; i < vertices.rows();i++)
