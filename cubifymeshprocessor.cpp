@@ -16,8 +16,15 @@
 #include <igl/svd3x3.h>
 #include <igl/rotation_matrix_from_directions.h>
 #include <igl/writeOBJ.h>
+#include "Mesh.h"
+
 
 CubifyMeshProcessor::CubifyMeshProcessor()
+{
+
+}
+
+CubifyMeshProcessor::~CubifyMeshProcessor()
 {
 
 }
@@ -34,8 +41,9 @@ void CubifyMeshProcessor::init(std::string filename)
 //    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
 //    igl::read_triangle_mesh("./meshes/bean.obj", V, F);
 
+    _mesh = std::make_unique<Mesh>();
+    _mesh->preProcess(V,F);
 
-    Eigen::VectorXd E;
 
     Eigen::MatrixXd U = V ;
 
@@ -55,7 +63,7 @@ void CubifyMeshProcessor::init(std::string filename)
 
     std::cout << RotationsXVertex[0] <<std::endl;
 
-  globalStep(V,F,E, testRots, Vf);
+  globalStep(V,F, testRots, Vf);
 
 
 //    std::cout << V <<std::endl;
@@ -78,10 +86,12 @@ void CubifyMeshProcessor::init(std::string filename)
 
     _shape = std::make_shared<Shape>();
 
+
      checkError();
 
      igl::writeOBJ("./meshes/cub3CUBY.obj",Vf,F);
     _shape->init(Vf,F);
+
 
 
   checkError();
@@ -137,18 +147,82 @@ void CubifyMeshProcessor::genTestRotations(const Eigen::MatrixXd& vertices,
 
 }
 
+//void CubifyMeshProcessor::preProcess(const Eigen::MatrixXd &vertices, const Eigen::MatrixXi &faces)
+//{
+
+//    igl::cotmatrix(vertices,faces,_cotangentWeigths);
+//    Eigen::MatrixXd normals;
+//    igl::per_vertex_normals(vertices,faces,_normals);
+
+
+//    igl::vertex_triangle_adjacency(vertices.rows(),faces,_incidentFaces,_vertexIndicesIncidents);
+
+
+//    _vertexList.resize(vertices.rows());
+
+//    _weigthsVecList.resize(faces.rows());
+//    _dv.resize(vertices.rows());
+
+//    //the barycentric area around vertex
+//    Eigen::SparseMatrix<double> tmp;
+//    igl::massmatrix(vertices,faces,igl::MASSMATRIX_TYPE_BARYCENTRIC,tmp);
+//    _areaXVertex = tmp.diagonal();
+
+//    Eigen::VectorXi b;
+
+//    std::vector<int> adjacentFaces;
+//    for(int i = 0 ; i <  vertices.rows(); i++)
+//    {
+//     adjacentFaces = _incidentFaces[i];
+//     int ns = adjacentFaces.size() * 3;
+//     _vertexList[i].resize(ns, 2);
+//     _weigthsVecList[i].resize(ns);
+
+//     for (size_t j=0; j<adjacentFaces.size(); j++)
+//     {
+//         int v0 = faces(adjacentFaces[j],0);
+//         int v1 = faces(adjacentFaces[j],1);
+//         int v2 = faces(adjacentFaces[j],2);
+
+//         _vertexList[i](3*j,0) = v0;
+//         _vertexList[i](3*j,1) = v1;
+//         _vertexList[i](3*j+1,0) = v1;
+//         _vertexList[i](3*j+1,1) = v2;
+//         _vertexList[i](3*j+2,0) = v2;
+//         _vertexList[i](3*j+2,1) = v0;
+
+
+//         _weigthsVecList[i](3*j) = _cotangentWeigths.coeff(v0,v1);
+//         _weigthsVecList[i](3*j+1) = _cotangentWeigths.coeff(v1,v2);
+//         _weigthsVecList[i](3*j+2) = _cotangentWeigths.coeff(v2,v0);
+//     }
+
+//     _dv[i].resize(3, adjacentFaces.size()*3);
+//     Eigen::MatrixXd hV0, hV1;
+
+//     Eigen::MatrixXi m =_vertexList[i].col(0);
+////      std::cout << "Here is the matrix m:" << std::endl   << m << std::endl;
+
+
+//     igl::slice(vertices,m,1,hV0);
+//     igl::slice(vertices,_vertexList[i].col(1),1,hV1);
+//     _dv[i] = (hV1 - hV0).transpose();
+//    }
+
+//}
+
 void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,
-                                     Eigen::VectorXd& energyXvertex, std::vector<Eigen::Matrix3d>& rots,
+                                     std::vector<Eigen::Matrix3d>& rots,
                                      Eigen::MatrixXd& Vf)
 {
 
-    int numVertices = vertices.size()/3;
-    int numFaces = faces.size()/3;
+    int numVertices = _mesh->_numVertices;
+    int numFaces = _mesh->_numFaces;
 
 
     //get cotan matrix
-    Eigen::SparseMatrix<double> cotangentW;
-    igl::cotmatrix(vertices,faces,cotangentW);
+//    Eigen::SparseMatrix<double> cotangentW;
+//    igl::cotmatrix(vertices,faces,cotangentW);
 
 //    cotangentW*cotangentW;
 
@@ -214,7 +288,7 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
     std::cout << numVertices <<std::endl;
 
     std::cout << myMat <<std::endl;
-    std::cout << cotangentW <<std::endl;
+    //std::cout << cotangentW <<std::endl;
 
     Eigen::MatrixXd LTEST(numVertices,numVertices);
 
@@ -223,7 +297,8 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
 
 
 
-    LTEST = myMat*cotangentW;
+    //LTEST = myMat*cotangentW;
+    LTEST = myMat*_mesh->_cotangentWeigths;
 
     std::cout << myMat.inverse() <<std::endl;
     std::cout << LTEST <<std::endl;
@@ -269,7 +344,7 @@ void CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen
               P_j =  vertices.row(j);
      //       std::cout << P_j <<std::endl;
 
-            float curWeight = cotangentW.coeff(i,j);
+            float curWeight = _mesh->_cotangentWeigths.coeff(i,j);
 
 
             Eigen::Vector3d P_diff = P_i - P_j;
@@ -349,70 +424,6 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
 
 
-    Eigen::SparseMatrix<double> cotangentW;
-    igl::cotmatrix(vertices,faces,cotangentW);
-    Eigen::MatrixXd normals;
-    igl::per_vertex_normals(vertices,faces,normals);
-
-
-    std::vector<std::vector<int>> incidentFaces;
-    std::vector<std::vector<int>> vertexIndicesIncidents;
-    igl::vertex_triangle_adjacency(vertices.rows(),faces,incidentFaces,vertexIndicesIncidents);
-
-    std::vector<Eigen::MatrixXi> vertexList(vertices.rows());
-
-    std::vector<Eigen::VectorXd> weigthsVecList(vertices.rows());
-    std::vector<Eigen::MatrixXd> dv(vertices.rows());
-
-
-
-
-
-     //the barycentric area around vertex
-     Eigen::SparseMatrix<double> tmp;
-     igl::massmatrix(vertices,faces,igl::MASSMATRIX_TYPE_BARYCENTRIC,tmp);
-     Eigen::MatrixXd areaXVertex = tmp.diagonal();
-
-     Eigen::VectorXi b;
-
-     std::vector<int> adjacentFaces;
-     for(int i = 0 ; i <  vertices.rows(); i++)
-     {
-      adjacentFaces = incidentFaces[i];
-      int ns = adjacentFaces.size() * 3;
-      vertexList[i].resize(ns, 2);
-      weigthsVecList[i].resize(ns);
-
-      for (size_t j=0; j<adjacentFaces.size(); j++)
-      {
-          int v0 = faces(adjacentFaces[j],0);
-          int v1 = faces(adjacentFaces[j],1);
-          int v2 = faces(adjacentFaces[j],2);
-
-          vertexList[i](3*j,0) = v0;
-          vertexList[i](3*j,1) = v1;
-          vertexList[i](3*j+1,0) = v1;
-          vertexList[i](3*j+1,1) = v2;
-          vertexList[i](3*j+2,0) = v2;
-          vertexList[i](3*j+2,1) = v0;
-
-
-          weigthsVecList[i](3*j) = cotangentW.coeff(v0,v1);
-          weigthsVecList[i](3*j+1) = cotangentW.coeff(v1,v2);
-          weigthsVecList[i](3*j+2) = cotangentW.coeff(v2,v0);
-      }
-
-      dv[i].resize(3, adjacentFaces.size()*3);
-      Eigen::MatrixXd hV0, hV1;
-
-      Eigen::MatrixXi m =vertexList[i].col(0);
-//      std::cout << "Here is the matrix m:" << std::endl   << m << std::endl;
-
-
-      igl::slice(vertices,m,1,hV0);
-      igl::slice(vertices,vertexList[i].col(1),1,hV1);
-      dv[i] = (hV1 - hV0).transpose();
-     }
 
      // Local step
 //    Eigen::MatrixXd z(3,vertices.rows());
@@ -436,11 +447,11 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
     {
         Eigen::VectorXd zk = z.col(0);
         Eigen::VectorXd uk = u.col(0);
-        Eigen::VectorXd vn = normals.row(i).transpose();
+        Eigen::VectorXd vn = _mesh->_normals.row(i).transpose();
 
         double pk = rhos(i);
 
-        Eigen::MatrixXi hE = vertexList[i];
+        Eigen::MatrixXi hE = _mesh->_vertexList[i];
 
         Eigen::MatrixXd dU(3,hE.rows());
 
@@ -450,8 +461,8 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
         dU = (U_hE1 - U_hE0).transpose();
 
-        Eigen::MatrixXd dV = dv[i];
-        Eigen::VectorXd vertexWeigth = weigthsVecList[i];
+        Eigen::MatrixXd dV = _mesh->_dv[i];
+        Eigen::VectorXd vertexWeigth = _mesh->_weigthsVecList[i];
 
 
         //for (int j=0; j<100; j++)
@@ -486,7 +497,7 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
             //https://web.stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf page  32
             //Sκ(a)=(a − κ)+ − (−a − κ)+
             // new Z
-            double kIndex = lambda *  areaXVertex(i) / pk;
+            double kIndex = lambda *  _mesh->_areaXVertex(i) / pk;
             Eigen::VectorXd a = newRotationM*vn+uk;
 
             Eigen::VectorXd lh = a.array() - kIndex;
@@ -585,13 +596,13 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
 }
 
-void CubifyMeshProcessor::optimalRotationMatrix(const Eigen::MatrixXd &dvi,
-                                                const Eigen::VectorXd &normali,
-                                                double pk,
-                                                const Eigen::MatrixXd &weigth,
-                                                const Eigen::MatrixXd &du, const Eigen::MatrixXd &displacement,
-                                                Eigen::Matrix3d& out)
-{
-  Eigen::Matrix3d deforfmedVertex = dvi * weigth.asDiagonal() * du.transpose();
-  out = deforfmedVertex + (pk * normali * displacement);
-}
+//void CubifyMeshProcessor::optimalRotationMatrix(const Eigen::MatrixXd &dvi,
+//                                                const Eigen::VectorXd &normali,
+//                                                double pk,
+//                                                const Eigen::MatrixXd &weigth,
+//                                                const Eigen::MatrixXd &du, const Eigen::MatrixXd &displacement,
+//                                                Eigen::Matrix3d& out)
+//{
+//  Eigen::Matrix3d deforfmedVertex = dvi * weigth.asDiagonal() * du.transpose();
+//  out = deforfmedVertex + (pk * normali * displacement);
+//}

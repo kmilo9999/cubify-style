@@ -7,11 +7,13 @@
 
 class Shader;
 class Shape;
+class Mesh;
 
 class CubifyMeshProcessor
 {
 public:
     CubifyMeshProcessor();
+   ~CubifyMeshProcessor();
     void init(std::string filename);
     void draw(Shader *m_shader);
     void update(float seconds);
@@ -26,21 +28,26 @@ public:
                                const Eigen::MatrixXd& displacement,Eigen::Matrix3d& out);
 
     void globalStep(const Eigen::MatrixXd& V,const Eigen::MatrixXi& F,
-                    Eigen::VectorXd& energyXvertex, std::vector<Eigen::Matrix3d>& rots,
+                     std::vector<Eigen::Matrix3d>& rots,
                     Eigen::MatrixXd& Vf);
     void genTestRotations(const Eigen::MatrixXd& vertices,std::vector<Eigen::Matrix3d>& rots);
-    void optimalRotationMatrix(const Eigen::MatrixXd &dvi,
-                                                    const Eigen::VectorXd &normali,
-                                                    double pk,
-                                                    const Eigen::MatrixXd &weigth,
-                                                    const Eigen::VectorXd &du, const Eigen::MatrixXd &displacement,
-                                                    Eigen::Matrix3d& out);
+//    void optimalRotationMatrix(const Eigen::MatrixXd &dvi,
+//                                                    const Eigen::VectorXd &normali,
+//                                                    double pk,
+//                                                    const Eigen::MatrixXd &weigth,
+//                                                    const Eigen::VectorXd &du, const Eigen::MatrixXd &displacement,
+//                                                    Eigen::Matrix3d& out);
+
+
 
 
 
 private:
 
     std::shared_ptr<Shape> _shape;
+    std::unique_ptr<Mesh> _mesh;
+
+
 };
 
 #endif // CUBIFYMESHPROCESSOR_H

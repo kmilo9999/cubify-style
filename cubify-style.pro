@@ -3,7 +3,7 @@ QT += core gui opengl
 TARGET = cubify-style
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -mstackrealign
+QMAKE_CXXFLAGS += -mstackrealign -Wa,-mbig-obj
 CONFIG += c++17
 
 unix:!macx {
@@ -14,6 +14,7 @@ win32 {
     LIBS += -lopengl32 -lglu32
 }
 SOURCES += \
+        Mesh.cpp \
         cubifymeshprocessor.cpp \
         libs/glew-1.10.0/src/glew.c \
         graphics/GraphicsDebug.cpp \
@@ -32,6 +33,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    Mesh.h \
     cubifymeshprocessor.h \
     graphics/GraphicsDebug.h \
     graphics/MeshLoader.h \
