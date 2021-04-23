@@ -29,6 +29,7 @@ void CubifyThread::setInput(const std::vector<std::shared_ptr<Mesh> > &meshes)
         data.ptr = mesh;
         data.updated = false;
         data.finished = false;
+        data.initialized = false;
         m_data.push_back(data);
         saved.insert(mesh);
     }
@@ -69,11 +70,12 @@ void CubifyThread::run()
             break;
         }
 
+        if (!m_data[m_index].initialized)
+            m_data[m_index].initialize();
+
         // get the one
-        Eigen::MatrixXd V = m_data[m_index].V;
-        Eigen::MatrixXd U = m_data[m_index].U;
-        Eigen::MatrixXi F = m_data[m_index].F;
-        m_data[m_index].finished = CubifyMeshProcessor::iteration(V, U, F);
+        CubifyGraphics::MatrixNd U;
+        m_data[m_index].finished = CubifyMeshProcessor::iteration(m_data[m_index], U);
         std::cout << "Ret:" << m_data[m_index].finished;
 
         // store the result

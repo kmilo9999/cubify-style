@@ -18,19 +18,19 @@ CubifyMeshProcessor::CubifyMeshProcessor()
 
 }
 
-bool CubifyMeshProcessor::iteration(Eigen::MatrixXd &V, Eigen::MatrixXd &U, Eigen::MatrixXi &F)
+bool CubifyMeshProcessor::iteration(const CubifyData& data, CubifyGraphics::MatrixNd &U)
 {
     Eigen::VectorXd E;
 
-    std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
+    std::vector<Eigen::Matrix3d> RotationsXVertex(data.V.rows());
 
-    localStep(V,U,F,RotationsXVertex);
+    localStep(data, RotationsXVertex);
 
     Eigen::MatrixXd Vf;
 
-    Vf.resize(V.rows(),3);
+    Vf.resize(data.V.rows(),3);
 
-    double delta = globalStep(V,F, RotationsXVertex, Vf);
+    double delta = globalStep(data, RotationsXVertex, Vf);
     // V = Vf;
     U = Vf;
 
@@ -139,17 +139,19 @@ void CubifyMeshProcessor::init(std::string filename)
 
 }
 
-double CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces, std::vector<Eigen::Matrix3d>& rots,
+double CubifyMeshProcessor::globalStep(const CubifyData& data, std::vector<Eigen::Matrix3d>& rots,
                                      Eigen::MatrixXd& Vf)
 {
 
-    int numVertices = vertices.size()/3;
-    int numFaces = faces.size()/3;
+    int numVertices = data.V.size()/3;
+    int numFaces = data.F.size()/3;
+
+    const Eigen::MatrixXd& vertices = data.V;
+    const Eigen::MatrixXi& faces = data.F;
 
 
     //get cotan matrix
-    Eigen::SparseMatrix<double> cotangentW;
-    igl::cotmatrix(vertices,faces,cotangentW);
+    const Eigen::SparseMatrix<double>& cotangentW = data.cotMatrix;
 
 //    cotangentW*cotangentW;
 
@@ -157,7 +159,7 @@ double CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eig
     //calc Laplace Beltrami
     std::vector<std::vector<int>> incidentFaces;
     std::vector<std::vector<int>> vertexIndicesIncidents;
-    igl::vertex_triangle_adjacency(vertices.rows(),faces,incidentFaces,vertexIndicesIncidents);
+    igl::vertex_triangle_adjacency(vertices.rows(), faces,incidentFaces,vertexIndicesIncidents);
     std::cout << "start global" <<std::endl;
 
 
@@ -355,17 +357,15 @@ double CubifyMeshProcessor::globalStep(const Eigen::MatrixXd& vertices,const Eig
 }
 
 
-void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen::MatrixXd& Uvertices,const Eigen::MatrixXi& faces,
+void CubifyMeshProcessor::localStep(const CubifyData& data,
                                      std::vector<Eigen::Matrix3d>& rotationXvertex)
 {
+    const Eigen::MatrixXd& vertices = data.V;
+    const Eigen::MatrixXi& faces = data.F;
+    Eigen::MatrixXd Uvertices = data.U;
 
-
-
-    Eigen::SparseMatrix<double> cotangentW;
-    igl::cotmatrix(vertices,faces,cotangentW);
-    Eigen::MatrixXd normals;
-    igl::per_vertex_normals(vertices,faces,normals);
-
+    const Eigen::SparseMatrix<double>& cotangentW = data.cotMatrix;
+    const Eigen::MatrixXd& normals = data.N;
 
     std::vector<std::vector<int>> incidentFaces;
     std::vector<std::vector<int>> vertexIndicesIncidents;
@@ -375,9 +375,6 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
 
     std::vector<Eigen::VectorXd> weigthsVecList(vertices.rows());
     std::vector<Eigen::MatrixXd> dv(vertices.rows());
-
-
-
 
 
      //the barycentric area around vertex

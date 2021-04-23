@@ -8,17 +8,24 @@
  */
 
 #include <memory>
+#include <Eigen/Sparse>
 #include "graphics/mesh.h"
 #include "graphics/dtype.h"
 
 struct CubifyData
 {
-    CubifyGraphics::MatrixNd V;
-    CubifyGraphics::MatrixNi F;
+    Eigen::MatrixXd V;
+    Eigen::MatrixXi F;
     CubifyGraphics::MatrixNd U;
     bool updated;
     bool finished;
     std::shared_ptr<Mesh> ptr;
+
+    Eigen::SparseMatrix<double> cotMatrix;
+    Eigen::MatrixXd N;
+
+    bool initialized;
+    void initialize();
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };

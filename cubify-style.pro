@@ -6,7 +6,7 @@ TEMPLATE = app
 CONFIG += c++17
 CONFIG -= app_bundle
 
-QMAKE_CXXFLAGS += -Wa,-mbig-obj
+QMAKE_CXXFLAGS += -mstackrealign -Wa,-mbig-obj
 
 unix:!macx {
     LIBS += -lGLU

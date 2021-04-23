@@ -2,6 +2,28 @@
 
 Download [libigl](https://github.com/libigl/libigl) and place it in the libs folder. you should be able to build and compile
 
+This is a branch that contains the realtime demo functions.
+
+## Compiling Problem
+The Cubify Processor is too big because of libigl header file. So you compiler should support big object file compilation or error you will get compilation errors like "Too many sections" or "Too big object files".
+
+This problem should have been solved. I just write it here in case you encounter the problem.
+
+## Important Files
+
+Here lists some important files:
+
+|File Path|Usage|
+|---|---|
+|cubify/cubifydata|Defines the data structure of mesh in cubify thread|
+|cubify/cubifythread|The thread class for cubify thread|
+|graphics/scenes/demoscene|The default scene|
+|graphics/meshfilter|The renderer class that combines mesh data and shaders|
+|graphics/mesh|The mesh structure for rendering thread|
+|graphics/generalpipeline|Defines the rendering pipeline|
+|graphics/pass/*|Defines rendering passes in pipeline|
+
+
 Rendering Instruction:
 The scene is defined in DemoScene.cpp under graphics/scenes/DemoScene.cpp. I suggest you only modify this file.
 
@@ -91,3 +113,9 @@ These transformation functions all return MeshRenderer reference except for get_
 ```
 MeshRenderer->translate(xxx)->rotate(xxx)->set_scale(xxx)
 ```
+
+## Custom Passes
+
+You can add render passes or post process by inheriting from classes like **RenderPass** and **Postprocess**. Refer to **Basepass** and **Posttonemapping** for details.
+
+Remember to register you pass in **GeneralPipeline::init**
