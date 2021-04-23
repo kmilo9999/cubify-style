@@ -54,25 +54,30 @@ void CubifyThread::run()
         // pick out one
         int finished = 0;
         while (m_data[m_index].updated || m_data[m_index].finished) {
-            m_index = (m_index + 1) % m_data.size();
-            finished++;
-            if (finished >= m_data.size()) {
-                // all finish, break
-                m_terminate = true;
-                break;
+            if (m_data[m_index].finished) {
+                finished++;
+                if (finished >= m_data.size()) {
+                    std::cout << "Thread finish working" << std::endl;
+                    m_terminate = true;
+                    break;
+                }
             }
+            m_index = (m_index + 1) % m_data.size();
         }
 
-        if (m_terminate)
+        if (m_terminate) {
             break;
+        }
 
         // get the one
         Eigen::MatrixXd V = m_data[m_index].V;
         Eigen::MatrixXd U = m_data[m_index].U;
         Eigen::MatrixXi F = m_data[m_index].F;
         m_data[m_index].finished = CubifyMeshProcessor::iteration(V, U, F);
+        std::cout << "Ret:" << m_data[m_index].finished;
 
         // store the result
+        // m_data[m_index].V = V;
         m_data[m_index].U = U;
 
         // updated, wait for access.

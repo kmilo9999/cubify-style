@@ -14,8 +14,8 @@
 struct CubifyData
 {
     CubifyGraphics::MatrixNd V;
-    CubifyGraphics::MatrixNd U;
     CubifyGraphics::MatrixNi F;
+    CubifyGraphics::MatrixNd U;
     bool updated;
     bool finished;
     std::shared_ptr<Mesh> ptr;

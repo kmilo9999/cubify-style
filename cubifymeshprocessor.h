@@ -16,7 +16,7 @@ public:
     static double globalStep(const Eigen::MatrixXd& V,const Eigen::MatrixXi& F, std::vector<Eigen::Matrix3d>& rots,
                     Eigen::MatrixXd& Vf);
 
-    static bool iteration(const Eigen::MatrixXd& V, Eigen::MatrixXd& U, const Eigen::MatrixXi& F);
+    static bool iteration(Eigen::MatrixXd& V, Eigen::MatrixXd& U, Eigen::MatrixXi& F);
 };
 
 #endif // CUBIFYMESHPROCESSOR_H

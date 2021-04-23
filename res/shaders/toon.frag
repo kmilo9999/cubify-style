@@ -107,6 +107,7 @@ void main(void)
     }
     diffuse = diffuse * diffuseColor * texColor;
     specular = specular * specularColor * texColor;
-    vec3 finalColor = ambient * 0 + diffuse + specular + sss;
+    // vec3 finalColor = ambient * 0 + diffuse + specular + sss;
+    vec3 finalColor = ambient + diffuse + specular + sss;
     FragColor = vec4(finalColor, 1.0);
 }

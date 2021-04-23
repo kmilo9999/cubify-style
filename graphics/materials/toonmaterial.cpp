@@ -3,7 +3,7 @@
 #include "graphics/camera.h"
 
 ToonMaterial::ToonMaterial() : Material(), diffuseColor(1.0, 1.0, 1.0), specularColor(1.0, 1.0, 1.0),
-    ambientColor(0.2, 0.2, 0.2), sssColor(0.4, 0.1, 0.1), specularPower(20.f), sssPower(.2f), sssRadius(0.1f),
+    ambientColor(0, 0, 0), sssColor(0.4, 0.1, 0.1), specularPower(20.f), sssPower(.2f), sssRadius(0.1f),
     colorLevels(-0.3f, 0.4f, 1.f), colorPowers(0.1f, 0.5f, 0.9f, 1.f), colorRadius(0.05f, 0.05f, 0.02f)
 {
     getShaders(this);

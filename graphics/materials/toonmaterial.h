@@ -30,15 +30,15 @@ public:
     float sssPower;
     float sssRadius;
 
-protected:
-    void createShader();
-    std::shared_ptr<Shader> m_shader;
-    std::shared_ptr<Shader> m_outlineShader;
-
     // some special property
     Eigen::Vector3f colorLevels;
     Eigen::Vector4f colorPowers;
     Eigen::Vector3f colorRadius;
+
+protected:
+    void createShader();
+    std::shared_ptr<Shader> m_shader;
+    std::shared_ptr<Shader> m_outlineShader;
 
     void updatePropertyWhenBind();
 

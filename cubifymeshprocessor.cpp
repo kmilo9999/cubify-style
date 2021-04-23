@@ -18,8 +18,10 @@ CubifyMeshProcessor::CubifyMeshProcessor()
 
 }
 
-bool CubifyMeshProcessor::iteration(const Eigen::MatrixXd &V, Eigen::MatrixXd &U, const Eigen::MatrixXi &F)
+bool CubifyMeshProcessor::iteration(Eigen::MatrixXd &V, Eigen::MatrixXd &U, Eigen::MatrixXi &F)
 {
+    Eigen::VectorXd E;
+
     std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
 
     localStep(V,U,F,RotationsXVertex);
@@ -29,6 +31,7 @@ bool CubifyMeshProcessor::iteration(const Eigen::MatrixXd &V, Eigen::MatrixXd &U
     Vf.resize(V.rows(),3);
 
     double delta = globalStep(V,F, RotationsXVertex, Vf);
+    // V = Vf;
     U = Vf;
 
     return delta < 1e-3;
@@ -36,6 +39,103 @@ bool CubifyMeshProcessor::iteration(const Eigen::MatrixXd &V, Eigen::MatrixXd &U
 
 void CubifyMeshProcessor::init(std::string filename)
 {
+    /*
+    QString mesh = QApplication::arguments()[1];
+    QString numIterations = QApplication::arguments()[2];
+    int numIterationsInt = atoi(numIterations.toUtf8().constData());
+    std::cout <<  mesh.toUtf8().constData() << std::endl;
+    std::cout <<  numIterationsInt << std::endl;
+
+
+    Eigen::MatrixXd V;
+
+    Eigen::MatrixXi F;
+
+
+    if (mesh == "bunny"){
+       igl::read_triangle_mesh("./meshes/bunny.obj", V, F);
+
+    }
+    else if (mesh == "sphere"){
+       igl::read_triangle_mesh("./meshes/sphere.obj", V, F);
+
+    }
+    else if (mesh == "cow"){
+       igl::read_triangle_mesh("./meshes/cow.obj", V, F);
+
+    }
+    else if (mesh == "bean"){
+       igl::read_triangle_mesh("./meshes/bean.obj", V, F);
+
+    }
+
+
+//    igl::read_triangle_mesh("./meshes/Cube.obj", V, F);
+//    igl::read_triangle_mesh("./meshes/bean.obj", V, F);
+
+//        igl::read_triangle_mesh("./meshes/teapot.obj", V, F);
+
+    std::vector<Eigen::Matrix3d> testRots;
+
+    genTestRotations(V,testRots);
+    Eigen::MatrixXd Vf;
+
+
+    for ( size_t i = 0; i < numIterationsInt; i++){
+        Eigen::VectorXd E;
+
+        Eigen::MatrixXd U = V ;
+
+        std::vector<Eigen::Matrix3d> RotationsXVertex(V.rows());
+
+        localStep(V,U,F,RotationsXVertex);
+
+
+
+        Vf.resize(V.rows(),3);
+        std::cout << "RotationsXVertex" <<std::endl;
+        std::cout << "RotationsXVertex" <<std::endl;
+
+
+      globalStep(V,F,E, RotationsXVertex, Vf);
+      std::cout << i << std::endl;
+      V = Vf;
+    }
+
+
+  if (mesh == "bunny"){
+      igl::writeOBJ("./meshes/bunnyCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "sphere"){
+      igl::writeOBJ("./meshes/sphereCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "cow"){
+      igl::writeOBJ("./meshes/cowCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "bean"){
+      igl::writeOBJ("./meshes/beanCUBY.obj",Vf,F);
+
+  }
+
+
+
+
+
+    _shape = std::make_shared<Shape>();
+
+     checkError();
+
+    _shape->init(Vf,F);
+
+
+  checkError();*/
+
+
+
+ // _shape->setModelMatrix(Eigen::Affine3f(Eigen::Scaling(0.2f, 0.2f, 0.2f)));
 
 }
 

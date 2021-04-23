@@ -160,7 +160,7 @@ void View::keyPressEvent(QKeyEvent *event)
         if (m_thread->isRunning()) {
             m_thread->softStop();
         }
-        if (m_thread->isFinished()) {
+        if (!m_thread->isFinished()) {
             m_thread->start();
         }
     }
