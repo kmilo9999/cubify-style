@@ -65,6 +65,10 @@ void CubifyMeshProcessor::init(std::string filename)
        igl::read_triangle_mesh("./meshes/bean.obj", V, F);
 
     }
+    else if (mesh == "spot"){
+       igl::read_triangle_mesh("./meshes/spot.obj", V, F);
+
+    }
     _mesh = std::make_unique<Mesh>();
     _mesh->preProcess(V,F);
 
@@ -143,6 +147,10 @@ void CubifyMeshProcessor::init(std::string filename)
   }
   else if (mesh == "bean"){
       igl::writeOBJ("./meshes/beanCUBY.obj",Vf,F);
+
+  }
+  else if (mesh == "spot"){
+     igl::writeOBJ("./meshes/spotCUBY.obj", Vf, F);
 
   }
 
@@ -522,7 +530,7 @@ void CubifyMeshProcessor::localStep(const Eigen::MatrixXd& vertices,const Eigen:
     rhos.setConstant(1e-4);
 
 
-    double lambda = 0.5;
+    double lambda = 0.4;
 
 
     for(int i=0; i < vertices.rows();i++)
