@@ -25,8 +25,10 @@ void CubifyThread::setInput(const std::vector<std::shared_ptr<Mesh> > &meshes)
         CubifyData data;
         data.V = mesh->getVerticeMatrix();
         data.F = mesh->getFaceMatrix();
+        data.U = mesh->getVerticeMatrix();
         data.ptr = mesh;
         data.updated = false;
+        data.finished = false;
         m_data.push_back(data);
         saved.insert(mesh);
     }
@@ -50,17 +52,28 @@ void CubifyThread::run()
     // this is the main process
     while(!m_terminate) {
         // pick out one
-        while (m_data[m_index].updated) {
+        int finished = 0;
+        while (m_data[m_index].updated || m_data[m_index].finished) {
             m_index = (m_index + 1) % m_data.size();
+            finished++;
+            if (finished >= m_data.size()) {
+                // all finish, break
+                m_terminate = true;
+                break;
+            }
         }
+
+        if (m_terminate)
+            break;
 
         // get the one
         Eigen::MatrixXd V = m_data[m_index].V;
+        Eigen::MatrixXd U = m_data[m_index].U;
         Eigen::MatrixXi F = m_data[m_index].F;
-        CubifyMeshProcessor::iteration(V, F);
+        m_data[m_index].finished = CubifyMeshProcessor::iteration(V, U, F);
 
         // store the result
-        m_data[m_index].V = V;
+        m_data[m_index].U = U;
 
         // updated, wait for access.
         m_data[m_index].updated = true;

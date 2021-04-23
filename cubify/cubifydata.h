@@ -14,8 +14,10 @@
 struct CubifyData
 {
     CubifyGraphics::MatrixNd V;
+    CubifyGraphics::MatrixNd U;
     CubifyGraphics::MatrixNi F;
     bool updated;
+    bool finished;
     std::shared_ptr<Mesh> ptr;
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW

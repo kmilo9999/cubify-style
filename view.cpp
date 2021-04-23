@@ -75,7 +75,7 @@ void View::paintGL()
     // for each render loop, update meshes
     for (size_t i = 0; i < m_updateQueue.size(); ++i) {
         CubifyData* data = m_updateQueue[i];
-        data->ptr->update(data->V, data->F);
+        data->ptr->update(data->U, data->F);
         data->updated = false;
     }
     m_updateQueue.clear();
